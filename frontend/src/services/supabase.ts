@@ -1,0 +1,116 @@
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { DemandStatus, Role } from '../types';
+
+type AccountStatus = 'PENDING' | 'ACTIVE' | 'REJECTED';
+
+interface Database {
+  public: {
+    Tables: {
+      profiles: {
+        Row: {
+          id: string;
+          email: string;
+          full_name: string;
+          role: Role;
+          department: string;
+          status: AccountStatus;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          email: string;
+          full_name: string;
+          role?: Role;
+          department?: string;
+          status?: AccountStatus;
+        };
+        Update: {
+          role?: Role;
+          department?: string;
+          status?: AccountStatus;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      demands: {
+        Row: {
+          id: string;
+          code: string;
+          client_name: string;
+          title: string;
+          description: string;
+          status: DemandStatus;
+          budget_total: number;
+          commercial_responsible_id: string;
+          payment_terms: string | null;
+          invoiced_value: number | null;
+          cost_estimate: number | null;
+          financial_approved: boolean;
+          required_roles: string[];
+          assigned_staff_count: number;
+          rh_approved: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          client_name: string;
+          title: string;
+          description: string;
+          budget_total: number;
+          commercial_responsible_id: string;
+        };
+        Update: {
+          status?: DemandStatus;
+          payment_terms?: string | null;
+          invoiced_value?: number | null;
+          cost_estimate?: number | null;
+          financial_approved?: boolean;
+          required_roles?: string[];
+          assigned_staff_count?: number;
+          rh_approved?: boolean;
+        };
+        Relationships: [];
+      };
+      demand_history: {
+        Row: {
+          id: string;
+          demand_id: string;
+          timestamp: string;
+          author_id: string | null;
+          author_name: string;
+          department: string;
+          action: string;
+          details: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+    };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
+  };
+}
+
+let client: SupabaseClient<Database> | undefined;
+
+export const getSupabase = (): SupabaseClient<Database> => {
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !publishableKey) {
+    throw new Error('Supabase não configurado. Preencha frontend/.env.local a partir de frontend/.env.example.');
+  }
+  if (!client) {
+    client = createClient<Database>(url, publishableKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+      },
+    });
+  }
+  return client;
+};
