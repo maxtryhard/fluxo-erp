@@ -3,7 +3,6 @@ import {
   Activity,
   ArrowDownToLine,
   ArrowRight,
-  ArrowUpRight,
   BriefcaseBusiness,
   Check,
   ChevronDown,
@@ -67,7 +66,7 @@ const roleLabels: Record<Role, string> = {
   GERENCIA: 'Gerência',
 };
 
-const navGroups: { label: string; items: { page: Page; label: string; icon: typeof LayoutDashboard; roles?: Role[] }[] }[] = [
+const navGroups: { label: string; items: { page: Page; label: string; icon: typeof LayoutDashboard; roles?: Role[]; keywords?: string[] }[] }[] = [
   {
     label: 'Workspace',
     items: [{ page: 'overview', label: 'Visão geral', icon: LayoutDashboard }],
@@ -85,6 +84,10 @@ const navGroups: { label: string; items: { page: Page; label: string; icon: type
     label: 'Administração',
     items: [{ page: 'registrations', label: 'Cadastros pendentes', icon: ShieldCheck, roles: ['ADMIN'] }],
   },
+  {
+    label: 'Conta',
+    items: [{ page: 'profile', label: 'Meu perfil', icon: UserRound, keywords: ['perfil', 'conta', 'usuário', 'usuario', 'account'] }],
+  },
 ];
 
 function App() {
@@ -100,6 +103,7 @@ function App() {
   const [historyDemand, setHistoryDemand] = useState<Demand | null>(null);
   const [history, setHistory] = useState<DemandHistory[]>([]);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [navSearch, setNavSearch] = useState('');
 
   const refresh = useCallback(async () => {
     const data = await api.demands();
@@ -217,10 +221,24 @@ function App() {
     return <LoginScreen onLogin={handleLogin} onRegister={handleRegister} error={error} />;
   }
 
-  const visibleNavGroups = navGroups
+  const authorizedNavGroups = navGroups
     .map((group) => ({
       ...group,
       items: group.items.filter((item) => !item.roles || item.roles.includes(user.role)),
+    }))
+    .filter((group) => group.items.length > 0);
+  const normalizedNavSearch = navSearch.trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const visibleNavGroups = authorizedNavGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => {
+        const searchableText = [item.label, group.label, ...(item.keywords ?? [])]
+          .join(' ')
+          .toLocaleLowerCase('pt-BR')
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '');
+        return searchableText.includes(normalizedNavSearch);
+      }),
     }))
     .filter((group) => group.items.length > 0);
   const pageTitle = pageLabels[page];
@@ -239,8 +257,19 @@ function App() {
           <span className="workspace-context-icon"><Activity size={16} /></span>
           <span><strong>Operação integrada</strong><small>Comercial · Financeiro · RH</small></span>
         </div>
+        <label className="nav-search">
+          <Search size={16} aria-hidden="true" />
+          <input
+            type="search"
+            aria-label="Buscar páginas do menu"
+            placeholder="Buscar páginas..."
+            value={navSearch}
+            onChange={(event) => setNavSearch(event.target.value)}
+          />
+          {navSearch && <button type="button" aria-label="Limpar busca do menu" onClick={() => setNavSearch('')}><X size={15} /></button>}
+        </label>
         <nav className="main-nav" aria-label="Navegação principal">
-          {visibleNavGroups.map((group) => (
+          {visibleNavGroups.length ? visibleNavGroups.map((group) => (
             <section className="nav-section" key={group.label}>
               <h2 className="nav-section-title">{group.label}</h2>
               <div className="nav-section-items">
@@ -249,7 +278,7 @@ function App() {
                     key={itemPage}
                     className={`nav-item ${page === itemPage ? 'nav-item-active' : ''}`}
                     aria-current={page === itemPage ? 'page' : undefined}
-                    onClick={() => { setPage(itemPage); setMobileNavOpen(false); }}
+                    onClick={() => { setPage(itemPage); setNavSearch(''); setMobileNavOpen(false); }}
                   >
                     <span className="nav-item-icon"><Icon size={17} strokeWidth={1.8} /></span>
                     <span className="nav-item-label">{label}</span>
@@ -259,14 +288,15 @@ function App() {
                 ))}
               </div>
             </section>
-          ))}
+          )) : (
+            <p className="nav-no-results" role="status">Nenhuma página encontrada.</p>
+          )}
         </nav>
         <div className="sidebar-bottom">
-          <button className={`profile-button ${page === 'profile' ? 'profile-button-active' : ''}`} onClick={() => { setPage('profile'); setMobileNavOpen(false); }} aria-current={page === 'profile' ? 'page' : undefined}>
+          <div className="profile-button">
             <span className="user-avatar">{user.name.slice(0, 1).toUpperCase()}</span>
             <span className="user-meta">{user.name}<small>{roleLabels[user.role]}</small></span>
-            <ArrowUpRight size={15} />
-          </button>
+          </div>
           <button className="sidebar-logout" onClick={() => void handleLogout()}><LogOut size={16} />Sair da conta</button>
         </div>
       </aside>

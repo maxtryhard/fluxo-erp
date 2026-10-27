@@ -41,6 +41,8 @@ The user later supplied a separate login-screen reference: a white account form 
 
 The user also supplied a settings-menu reference with an icon rail and a larger account-navigation panel, plus a profile-card reference and a financial-analytics dashboard. Use the menu's focused active state and icon hierarchy only where the product has matching, authorized destinations; do not add fake settings. The profile-card image inspires a clearer account identity card, not invented ratings, earnings, skills, or contact actions. The analytics image inspires a light financial dashboard with a large chart, KPI stack, and supporting panels. Since Fluxo has no monthly financial series or expense ledger, use actual demand counts by workflow stage, total budgets, and recorded invoiced values instead of copying monthly income/expense charts or trends.
 
+The menu reference's task-search field is adapted to filter only destinations available to the signed-in role, including the account profile. Preserve a clear no-results state and a one-click reset; do not make hidden/unauthorized destinations discoverable through search.
+
 ## Combined direction
 
 Fluxo should feel like a professional CRM/ERP workspace: light navigation, warm neutral surfaces, ink-like text, restrained periwinkle interactive accents, and stage-based demand cards. Use compact real-data summaries and keep the integrated Commercial → Finance → People handoff more prominent than decoration. The entry screen uses a light split login and factual workflow introduction. Never claim visual review of a reference that could not be opened.
