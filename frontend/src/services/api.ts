@@ -1,4 +1,4 @@
-import type { Demand, DemandHistory, DemandStatus, Overview, RegistrationRequest, Role, User } from '../types';
+import type { CreateDemandInput, Demand, DemandHistory, DemandStatus, Overview, RegistrationRequest, Role, User } from '../types';
 import { getSupabase } from './supabase';
 
 type ProfileRow = {
@@ -28,15 +28,15 @@ const toDemand = (row: {
   title: string;
   description: string;
   status: DemandStatus;
-  budget_total: number;
+  budget_total: number | null;
   commercial_responsible_id: string;
   payment_terms: string | null;
   invoiced_value: number | null;
   cost_estimate: number | null;
-  financial_approved: boolean;
-  required_roles: string[];
-  assigned_staff_count: number;
-  rh_approved: boolean;
+  financial_approved: boolean | null;
+  required_roles: string[] | null;
+  assigned_staff_count: number | null;
+  rh_approved: boolean | null;
   created_at: string;
   updated_at: string;
 }): Demand => ({
@@ -46,15 +46,15 @@ const toDemand = (row: {
   title: row.title,
   description: row.description,
   status: row.status,
-  budgetTotal: Number(row.budget_total),
+  budgetTotal: row.budget_total === null ? undefined : Number(row.budget_total),
   commercialResponsibleId: row.commercial_responsible_id,
   paymentTerms: row.payment_terms ?? undefined,
   invoicedValue: row.invoiced_value === null ? undefined : Number(row.invoiced_value),
   costEstimate: row.cost_estimate === null ? undefined : Number(row.cost_estimate),
-  financialApproved: row.financial_approved,
-  requiredRoles: row.required_roles,
-  assignedStaffCount: row.assigned_staff_count,
-  rhApproved: row.rh_approved,
+  financialApproved: row.financial_approved ?? undefined,
+  requiredRoles: row.required_roles ?? undefined,
+  assignedStaffCount: row.assigned_staff_count ?? undefined,
+  rhApproved: row.rh_approved ?? undefined,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -89,6 +89,10 @@ const requireActiveProfile = async (id: string): Promise<User> => {
 
 const ensureUpdated = (id: string | null): void => {
   if (!id) throw new Error('Registro não encontrado ou etapa do fluxo não autorizada.');
+};
+
+const ensureUpdatedCount = (count: number | null): void => {
+  if (count !== 1) throw new Error('Registro não encontrado ou etapa do fluxo não autorizada.');
 };
 
 export const api = {
@@ -174,10 +178,7 @@ export const api = {
   },
 
   async demands(): Promise<Demand[]> {
-    const { data, error } = await getSupabase()
-      .from('demands')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const { data, error } = await getSupabase().rpc('get_visible_demands');
 
     if (error) throw new Error(error.message);
     return data.map(toDemand);
@@ -191,7 +192,7 @@ export const api = {
     }
     return {
       totalDemands: demands.length,
-      totalBudget: demands.reduce((total, demand) => total + demand.budgetTotal, 0),
+      totalBudget: demands.reduce((total, demand) => total + (demand.budgetTotal ?? 0), 0),
       totalInvoiced: demands.reduce((total, demand) => total + (demand.invoicedValue ?? 0), 0),
       byStatus,
       activeDemands: demands.filter((demand) => !['ENTREGUE', 'CANCELADO'].includes(demand.status)).length,
@@ -199,11 +200,7 @@ export const api = {
   },
 
   async demandHistory(id: string): Promise<DemandHistory[]> {
-    const { data, error } = await getSupabase()
-      .from('demand_history')
-      .select('*')
-      .eq('demand_id', id)
-      .order('timestamp', { ascending: true });
+    const { data, error } = await getSupabase().rpc('get_visible_demand_history', { p_demand_id: id });
 
     if (error) throw new Error(error.message);
     return data.map((event) => ({
@@ -218,7 +215,7 @@ export const api = {
     }));
   },
 
-  async createDemand(data: Pick<Demand, 'clientName' | 'title' | 'description' | 'budgetTotal'>): Promise<void> {
+  async createDemand(data: CreateDemandInput): Promise<void> {
     const { data: authData, error: authError } = await getSupabase().auth.getUser();
     if (authError) throw new Error(authError.message);
     if (!authData.user) throw new Error('Entre novamente para cadastrar uma demanda.');
@@ -234,22 +231,20 @@ export const api = {
   },
 
   async approveCommercial(id: string): Promise<void> {
-    const { data, error } = await getSupabase()
+    const { count, error } = await getSupabase()
       .from('demands')
-      .update({ status: 'APROVADO_COMERCIAL' })
+      .update({ status: 'APROVADO_COMERCIAL' }, { count: 'exact' })
       .eq('id', id)
-      .eq('status', 'ORCAMENTO')
-      .select('id')
-      .maybeSingle();
+      .eq('status', 'ORCAMENTO');
     if (error) throw new Error(error.message);
-    ensureUpdated(data?.id ?? null);
+    ensureUpdatedCount(count);
   },
 
   async updateFinancial(
     id: string,
     update: { paymentTerms: string; costEstimate: number; invoicedValue: number; approved: boolean },
   ): Promise<void> {
-    const { data, error } = await getSupabase()
+    const { count, error } = await getSupabase()
       .from('demands')
       .update({
         payment_terms: update.paymentTerms,
@@ -257,33 +252,29 @@ export const api = {
         invoiced_value: update.invoicedValue,
         financial_approved: update.approved,
         status: update.approved ? 'ALOCACAO_RH' : 'CANCELADO',
-      })
+      }, { count: 'exact' })
       .eq('id', id)
-      .eq('status', 'APROVADO_COMERCIAL')
-      .select('id')
-      .maybeSingle();
+      .eq('status', 'APROVADO_COMERCIAL');
     if (error) throw new Error(error.message);
-    ensureUpdated(data?.id ?? null);
+    ensureUpdatedCount(count);
   },
 
   async updateHr(
     id: string,
     update: { requiredRoles: string[]; assignedStaffCount: number; approved: boolean },
   ): Promise<void> {
-    const { data, error } = await getSupabase()
+    const { count, error } = await getSupabase()
       .from('demands')
       .update({
         required_roles: update.requiredRoles,
         assigned_staff_count: update.assignedStaffCount,
         rh_approved: update.approved,
         status: update.approved ? 'EM_EXECUCAO' : 'ALOCACAO_RH',
-      })
+      }, { count: 'exact' })
       .eq('id', id)
-      .eq('status', 'ALOCACAO_RH')
-      .select('id')
-      .maybeSingle();
+      .eq('status', 'ALOCACAO_RH');
     if (error) throw new Error(error.message);
-    ensureUpdated(data?.id ?? null);
+    ensureUpdatedCount(count);
   },
 
   async logout(): Promise<void> {

@@ -20,7 +20,7 @@ import {
   X,
 } from 'lucide-react';
 import { api } from './services/api';
-import type { Demand, DemandHistory, DemandStatus, Overview, RegistrationRequest, Role, User } from './types';
+import type { CreateDemandInput, Demand, DemandHistory, DemandStatus, Overview, RegistrationRequest, Role, User } from './types';
 
 const DataVisualization = lazy(() => import('./components/DataVisualization'));
 
@@ -149,7 +149,7 @@ function App() {
     const query = search.trim().toLocaleLowerCase('pt-BR');
     const byPage = demands.filter((item) => {
       if (page === 'finance') return item.status === 'APROVADO_COMERCIAL';
-      if (page === 'people') return item.status === 'ALOCACAO_RH' && item.financialApproved && !item.rhApproved;
+      if (page === 'people') return item.status === 'ALOCACAO_RH' && !item.rhApproved;
       if (page === 'commercial') return item.status === 'ORCAMENTO' || item.status === 'APROVADO_COMERCIAL';
       return true;
     });
@@ -243,7 +243,7 @@ function App() {
     .filter((group) => group.items.length > 0);
   const pageTitle = pageLabels[page];
   const requestCount = demands.filter((item) => !['ENTREGUE', 'CANCELADO'].includes(item.status)).length;
-  const totalBudget = overview?.totalBudget ?? demands.reduce((sum, item) => sum + item.budgetTotal, 0);
+  const totalBudget = overview?.totalBudget ?? demands.reduce((sum, item) => sum + (item.budgetTotal ?? 0), 0);
   const totalInvoiced = overview?.totalInvoiced ?? demands.reduce((sum, item) => sum + (item.invoicedValue ?? 0), 0);
 
   return (
@@ -481,6 +481,8 @@ function OverviewPage({ user, demands, activeCount, totalBudget, totalInvoiced, 
   user: User; demands: Demand[]; activeCount: number; totalBudget: number; totalInvoiced: number;
   onOpenDemands: () => void; onHistory: (demand: Demand) => void;
 }) {
+  const canSeeFinancialData = ['ADMIN', 'GERENCIA', 'FINANCEIRO'].includes(user.role);
+  const canSeeBudget = user.role !== 'RH';
   const stages: { label: string; statuses: DemandStatus[] }[] = [
     { label: 'Comercial', statuses: ['ORCAMENTO'] },
     { label: 'Financeiro', statuses: ['APROVADO_COMERCIAL', 'EM_ANALISE_FINANCEIRA', 'FATURADO'] },
@@ -493,7 +495,7 @@ function OverviewPage({ user, demands, activeCount, totalBudget, totalInvoiced, 
     return {
       ...stage,
       count: stageDemands.length,
-      budget: stageDemands.reduce((sum, demand) => sum + demand.budgetTotal, 0),
+      budget: stageDemands.reduce((sum, demand) => sum + (demand.budgetTotal ?? 0), 0),
       invoiced: stageDemands.reduce((sum, demand) => sum + (demand.invoicedValue ?? 0), 0),
     };
   });
@@ -507,8 +509,8 @@ function OverviewPage({ user, demands, activeCount, totalBudget, totalInvoiced, 
         <button className="primary-button" onClick={onOpenDemands}><FileText size={16} /> Abrir demandas <ArrowRight size={15} /></button>
       </div>
 
-      <div className="analytics-top-grid">
-        <section className="analytics-panel stage-analytics" aria-labelledby="stage-analytics-title">
+      <div className={`analytics-top-grid ${canSeeFinancialData ? '' : 'analytics-top-grid-limited'}`}>
+        {canSeeFinancialData && <section className="analytics-panel stage-analytics" aria-labelledby="stage-analytics-title">
           <div className="analytics-panel-heading">
             <div><span className="analytics-kicker">FINANCEIRO</span><h2 id="stage-analytics-title">Orçamento e faturamento por etapa</h2><p>Valores registrados por área do fluxo</p></div>
             <span className="chart-total"><strong>{demands.length}</strong><small>no total</small></span>
@@ -526,11 +528,11 @@ function OverviewPage({ user, demands, activeCount, totalBudget, totalInvoiced, 
           ) : (
             <div className="analytics-empty"><ClipboardList size={22} /><strong>Seu fluxo começa aqui</strong><span>Cadastre uma demanda para acompanhar a operação por etapa.</span><button className="text-button" onClick={onOpenDemands}>Ver demandas <ArrowRight size={14} /></button></div>
           )}
-        </section>
+        </section>}
 
-        <aside className="analytics-kpis" aria-label="Indicadores da operação">
-          <MetricCard icon={CircleDollarSign} label="Orçamento total" value={money(totalBudget)} note="Soma das demandas" tone="blue" />
-          <MetricCard icon={ArrowDownToLine} label="Total faturado" value={money(totalInvoiced)} note="Valores registrados" tone="orange" />
+        <aside className={`analytics-kpis ${canSeeFinancialData ? '' : 'analytics-kpis-limited'}`} aria-label="Indicadores da operação">
+          {canSeeBudget && <MetricCard icon={CircleDollarSign} label="Orçamento total" value={money(totalBudget)} note="Soma das demandas" tone="blue" />}
+          {canSeeFinancialData && <MetricCard icon={ArrowDownToLine} label="Total faturado" value={money(totalInvoiced)} note="Valores registrados" tone="orange" />}
           <MetricCard icon={ClipboardList} label="Demandas ativas" value={String(activeCount)} note={`${demands.length} demandas cadastradas`} tone="green" />
         </aside>
       </div>
@@ -575,7 +577,7 @@ function OverviewPage({ user, demands, activeCount, totalBudget, totalInvoiced, 
                   <span className="recent-demand-mark"><FileText size={16} /></span>
                   <span className="recent-demand-details"><strong>{demand.title}</strong><small>{demand.code} · {demand.clientName}</small></span>
                   <StatusBadge status={demand.status} />
-                  <span className="recent-demand-value">{money(demand.budgetTotal)}</span>
+                  {demand.budgetTotal !== undefined && <span className="recent-demand-value">{money(demand.budgetTotal)}</span>}
                 </button>
               ))}
             </div>
@@ -612,12 +614,15 @@ function DemandCard({ demand, page, onHistory, onCommercialApprove, onFinancial,
         <div className="demand-code"><span className="demand-symbol"><FileText size={17} /></span><div><span>{demand.code}</span><small>{date(demand.createdAt)}</small></div></div>
         <div className="demand-info"><h3>{demand.title}</h3><p>{demand.clientName}</p></div>
         <StatusBadge status={demand.status} />
-        <div className="demand-amount"><span>ORÇAMENTO</span><strong>{money(demand.budgetTotal)}</strong></div>
+        {demand.budgetTotal !== undefined && <div className="demand-amount"><span>ORÇAMENTO</span><strong>{money(demand.budgetTotal)}</strong></div>}
         <button className={`expand-button ${expanded ? 'expanded' : ''}`} aria-label={expanded ? 'Fechar detalhes' : 'Abrir detalhes'} onClick={() => setExpanded(!expanded)}><ChevronDown size={18} /></button>
       </div>
       {expanded && <div className="demand-details">
-        <div className="detail-description"><strong>Resumo da demanda</strong><p>{demand.description}</p><button className="text-button history-link" onClick={onHistory}>Ver histórico completo <ArrowRight size={14} /></button></div>
-        <div className="detail-facts"><span>Financeiro <b>{demand.financialApproved ? 'Aprovado' : 'Pendente'}</b></span><span>Equipe de RH <b>{demand.rhApproved ? `${demand.assignedStaffCount ?? 0} pessoas alocadas` : 'Pendente'}</b></span></div>
+        <div className="detail-description"><strong>Resumo da demanda</strong><p>{demand.description}</p><button className="text-button history-link" onClick={onHistory}>Ver histórico disponível para sua área <ArrowRight size={14} /></button></div>
+        {(demand.financialApproved !== undefined || demand.rhApproved !== undefined) && <div className="detail-facts">
+          {demand.financialApproved !== undefined && <span>Financeiro <b>{demand.financialApproved ? 'Aprovado' : 'Pendente'}</b></span>}
+          {demand.rhApproved !== undefined && <span>Equipe de RH <b>{demand.rhApproved ? `${demand.assignedStaffCount ?? 0} pessoas alocadas` : 'Pendente'}</b></span>}
+        </div>}
         {page === 'commercial' && demand.status === 'ORCAMENTO' && <button className="primary-button review-trigger" onClick={onCommercialApprove}><Check size={15} /> Aprovar proposta e enviar ao Financeiro</button>}
         {(canReviewFinance || canReviewHr) && <button className="secondary-button review-trigger" onClick={() => setShowAction(!showAction)}>{showAction ? 'Cancelar' : canReviewFinance ? 'Revisar financeiro' : 'Revisar alocação'}<ChevronDown size={15} /></button>}
         {showAction && canReviewFinance && <form className="review-form" onSubmit={(event) => { event.preventDefault(); onFinancial({ paymentTerms: terms, costEstimate: Number(cost), invoicedValue: Number(invoiced), approved: true }); setShowAction(false); }}><label>Condição de pagamento<input value={terms} onChange={(event) => setTerms(event.target.value)} required placeholder="Ex.: 30/60/90 dias" /></label><label>Custo estimado (R$)<input type="number" min="0" step="0.01" value={cost} onChange={(event) => setCost(event.target.value)} required /></label><label>Valor faturado (R$)<input type="number" min="0" step="0.01" value={invoiced} onChange={(event) => setInvoiced(event.target.value)} required /></label><button className="primary-button" type="submit"><Check size={15} /> Aprovar análise</button></form>}
@@ -636,7 +641,7 @@ function EmptyState({ page, onCreate }: { page: Page; onCreate: () => void }) {
   return <div className="empty-state"><span className="empty-icon"><ClipboardList size={23} /></span><h3>Nenhuma demanda encontrada</h3><p>{page === 'finance' || page === 'people' ? 'Não há itens pendentes para sua área no momento.' : 'Tente alterar a busca ou cadastre uma nova demanda.'}</p>{page === 'commercial' && <button className="primary-button" onClick={onCreate}><Plus size={16} /> Nova demanda</button>}</div>;
 }
 
-function CreateDemandModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (data: Pick<Demand, 'clientName' | 'title' | 'description' | 'budgetTotal'>) => Promise<void> }) {
+function CreateDemandModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (data: CreateDemandInput) => Promise<void> }) {
   const [clientName, setClientName] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');

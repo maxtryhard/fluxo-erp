@@ -356,7 +356,3 @@ revoke all on public.profiles, public.demands, public.demand_history from anon;
 comment on table public.profiles is 'Perfil e estado de aprovação vinculados à identidade Supabase Auth.';
 comment on table public.demands is 'Registro central da demanda e seus dados Comercial, Financeiro e RH.';
 comment on table public.demand_history is 'Histórico append-only criado por triggers do banco.';
-
-update public.profiles
-   set role = 'ADMIN', department = 'Diretoria', status = 'ACTIVE'
-   where lower(email) = lower('socratesmaximo1@gmail.com');

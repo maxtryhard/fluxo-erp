@@ -880,6 +880,8 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
   gap: 16px;
   align-items: stretch;
 }
+.analytics-top-grid-limited { grid-template-columns: minmax(0, 1fr); }
+.analytics-kpis-limited { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 .analytics-panel {
   min-width: 0;
   overflow: hidden;
@@ -989,6 +991,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 @media (max-width: 760px) {
   .analytics-top-grid, .analytics-bottom-grid { grid-template-columns: 1fr; }
   .analytics-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .analytics-kpis-limited { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
   .analytics-kpis .metric-card { grid-template-areas: "icon" "label" "value" "note"; grid-template-columns: 1fr; justify-items: start; gap: 5px; padding: 14px 12px; }
   .analytics-kpis .metric-icon { width: 30px; height: 30px; }
   .analytics-kpis .metric-value { font-size: clamp(14px, 3vw, 19px); }

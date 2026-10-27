@@ -36,22 +36,7 @@ interface Database {
       demands: {
         Row: {
           id: string;
-          code: string;
-          client_name: string;
-          title: string;
-          description: string;
           status: DemandStatus;
-          budget_total: number;
-          commercial_responsible_id: string;
-          payment_terms: string | null;
-          invoiced_value: number | null;
-          cost_estimate: number | null;
-          financial_approved: boolean;
-          required_roles: string[];
-          assigned_staff_count: number;
-          rh_approved: boolean;
-          created_at: string;
-          updated_at: string;
         };
         Insert: {
           client_name: string;
@@ -89,7 +74,43 @@ interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      get_visible_demands: {
+        Args: Record<string, never>;
+        Returns: {
+          id: string;
+          code: string;
+          client_name: string;
+          title: string;
+          description: string;
+          status: DemandStatus;
+          budget_total: number | null;
+          commercial_responsible_id: string;
+          payment_terms: string | null;
+          invoiced_value: number | null;
+          cost_estimate: number | null;
+          financial_approved: boolean | null;
+          required_roles: string[] | null;
+          assigned_staff_count: number | null;
+          rh_approved: boolean | null;
+          created_at: string;
+          updated_at: string;
+        }[];
+      };
+      get_visible_demand_history: {
+        Args: { p_demand_id: string };
+        Returns: {
+          id: string;
+          demand_id: string;
+          timestamp: string;
+          author_id: string | null;
+          author_name: string;
+          department: string;
+          action: string;
+          details: string;
+        }[];
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

@@ -17,6 +17,13 @@ export interface RegistrationRequest {
   createdAt: string;
 }
 
+export interface CreateDemandInput {
+  clientName: string;
+  title: string;
+  description: string;
+  budgetTotal: number;
+}
+
 export type DemandStatus =
   | 'ORCAMENTO'
   | 'APROVADO_COMERCIAL'
@@ -34,15 +41,15 @@ export interface Demand {
   title: string;
   description: string;
   status: DemandStatus;
-  budgetTotal: number;
+  budgetTotal?: number;
   commercialResponsibleId: string;
   paymentTerms?: string;
   invoicedValue?: number;
   costEstimate?: number;
-  financialApproved: boolean;
+  financialApproved?: boolean;
   requiredRoles?: string[];
   assignedStaffCount?: number;
-  rhApproved: boolean;
+  rhApproved?: boolean;
   createdAt: string;
   updatedAt: string;
 }
