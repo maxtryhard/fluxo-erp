@@ -274,6 +274,15 @@ function App() {
       <main className="main-area">
         <header className="topbar">
           <button className="mobile-menu" aria-label="Abrir menu" onClick={() => setMobileNavOpen(true)}><Menu size={21} /></button>
+          <a
+            className="brand topbar-brand"
+            href="#"
+            aria-label="Fluxo — ir para Visão geral"
+            onClick={(event) => { event.preventDefault(); setPage('overview'); setMobileNavOpen(false); }}
+          >
+            <span className="brand-icon"><Activity size={18} strokeWidth={2.2} /></span>
+            <span>fluxo<span className="brand-period">.</span><small>GESTÃO INTEGRADA</small></span>
+          </a>
           <div className="breadcrumb"><span>Workspace</span><span className="crumb-separator">/</span><strong>{pageTitle}</strong></div>
           <div className="topbar-right"><span className="today-label">{date(new Date().toISOString())}</span></div>
         </header>
