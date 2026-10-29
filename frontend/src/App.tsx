@@ -6,6 +6,7 @@ import {
   BriefcaseBusiness,
   Check,
   ChevronDown,
+  ChevronRight,
   CircleDollarSign,
   ClipboardList,
   FileText,
@@ -284,6 +285,7 @@ function App() {
                     <span className="nav-item-label">{label}</span>
                     {itemPage === 'demands' && <span className="nav-count" aria-label={`${requestCount} demandas ativas`}>{requestCount}</span>}
                     {itemPage === 'registrations' && registrationRequests.length > 0 && <span className="nav-count" aria-label={`${registrationRequests.length} cadastros pendentes`}>{registrationRequests.length}</span>}
+                    {page === itemPage && <ChevronRight className="nav-item-current" size={16} aria-hidden="true" />}
                   </button>
                 ))}
               </div>
@@ -293,10 +295,6 @@ function App() {
           )}
         </nav>
         <div className="sidebar-bottom">
-          <div className="profile-button">
-            <span className="user-avatar">{user.name.slice(0, 1).toUpperCase()}</span>
-            <span className="user-meta">{user.name}<small>{roleLabels[user.role]}</small></span>
-          </div>
           <button className="sidebar-logout" onClick={() => void handleLogout()}><LogOut size={16} />Sair da conta</button>
         </div>
       </aside>
@@ -314,7 +312,19 @@ function App() {
             <span>fluxo<span className="brand-period">.</span><small>GESTÃO INTEGRADA</small></span>
           </a>
           <div className="breadcrumb"><span>Workspace</span><span className="crumb-separator">/</span><strong>{pageTitle}</strong></div>
-          <div className="topbar-right"><span className="today-label">{date(new Date().toISOString())}</span></div>
+          <div className="topbar-right">
+            <span className="today-label">{date(new Date().toISOString())}</span>
+            <button
+              className="topbar-profile"
+              type="button"
+              aria-label={`Abrir perfil de ${user.name}, ${roleLabels[user.role]}`}
+              onClick={() => setPage('profile')}
+            >
+              <span className="topbar-avatar">{user.name.slice(0, 1).toUpperCase()}</span>
+              <span className="topbar-profile-meta"><strong>{user.name}</strong><small>{roleLabels[user.role]}</small></span>
+              <ChevronDown size={15} aria-hidden="true" />
+            </button>
+          </div>
         </header>
         <div className="page-content">
           {error && <div className="alert" role="alert"><span>{error}</span><button aria-label="Fechar aviso" onClick={() => setError('')}><X size={16} /></button></div>}

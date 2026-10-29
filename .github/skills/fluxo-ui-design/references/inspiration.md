@@ -43,6 +43,22 @@ The user also supplied a settings-menu reference with an icon rail and a larger 
 
 The menu reference's task-search field is adapted to filter only destinations available to the signed-in role, including the account profile. Preserve a clear no-results state and a one-click reset; do not make hidden/unauthorized destinations discoverable through search.
 
+The latest menu and navigation references reinforce an easy-to-scan workspace identity, a generous search control, and one unmistakable selected destination. Fluxo uses its own dark active state with a quiet blue cue and trailing current-page indicator; it does not reproduce the reference's neon-green dock or its unrelated destinations. The Wemony-style analytics reference reinforces a broad chart panel, stacked summary cards, compact lower analysis panels, and account identity in the upper-right header. Fluxo adapts that hierarchy with its own brand and colors, uses real workflow-stage values only, and avoids fictional periods or financial categories. The profile control opens the existing account page; no extra menu actions are invented.
+
+## Collect UI — gallery and interaction references
+
+Source: https://collectui.com/
+
+The homepage was inspected in the browser, along with the Character Animation category at https://collectui.com/designs/character-animation-ui-design-inspiration. This is a representative review, not an audit of every design in the gallery.
+
+**Observed on the homepage:** a concise editorial hero with a subscription call to action, followed by a “Latest Designs” collection. The design cards expose category tags and creator attribution. The opened navigation presented Favorites, Home, Designers, Categories, and Trending, with separate social, feedback, and advertising links. The homepage also showed live visitor counts and sponsor placements; those are site-specific promotional elements, not ERP patterns to copy.
+
+**Observed on the category page:** a clear category title and short explanation, a newest-to-oldest sorting control, and a repeated card grid with like, category, and creator affordances. Category labels encountered across the homepage included Sidebar, Range Slider, Bento, UI Interaction, Onboarding, Character Animation, Progress, Todo List, AI Flow, and Portfolio. These labels indicate the breadth of the catalog, not proof that every associated detail page was inspected.
+
+**Inspection limitation:** the Character Animation page exposed video previews, but the browser reported failed/aborted video requests. The motion in those previews could therefore not be evaluated. Treat this as evidence that the category includes motion examples, not as evidence about their timing, easing, or quality.
+
+**Useful translation for Fluxo:** make destination and selected-state cues obvious; use filtering or sorting only where it helps users find real records; and give actions clear, local feedback. In approved marketing or onboarding contexts, a purposeful visual introduction can lead into the task. In operational screens, keep motion short and informative, avoid gratuitous counters and promotional clutter, and preserve the calm, data-first workspace. Never invent Favorites, AI, or other capabilities simply because a gallery exposes them.
+
 ## Combined direction
 
 Fluxo should feel like a professional CRM/ERP workspace: light navigation, warm neutral surfaces, ink-like text, restrained periwinkle interactive accents, and stage-based demand cards. Use compact real-data summaries and keep the integrated Commercial → Finance → People handoff more prominent than decoration. The entry screen uses a light split login and factual workflow introduction. Never claim visual review of a reference that could not be opened.

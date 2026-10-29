@@ -21,12 +21,23 @@ Use the visual direction of a focused CRM workspace with a product-specific iden
 
 References are inspiration, not implementation specifications. Do not copy their artwork, exact composition, text, branded assets, or pixel-level layout. Read [reference notes](./references/inspiration.md) before materially changing the product-wide visual direction.
 
+## Learning from inspiration galleries
+
+Treat galleries such as Collect UI as a catalog of different problems and interaction patterns, not as one cohesive design system. Select a few examples relevant to the requested screen (for example dashboard, sidebar, onboarding, progress, interaction, or character animation); do not imply the entire catalog was reviewed when it was not.
+
+- Separate what was directly visible in a rendered page from what was inferred from a title, tag, or description. If an image or video does not load, state that limitation and do not claim to have evaluated its animation.
+- Translate the underlying pattern to Fluxo's real task: clear navigation and current location, useful category/filter/sort controls, a visible next action, or a feedback state. Add a pattern only when Fluxo has the corresponding product capability.
+- For motion, identify its trigger and purpose before implementing it. Prefer brief transitions and feedback that clarify a state change; avoid blocking or perpetual decorative motion in operational screens. Keep motion optional, preserve keyboard access, and honor `prefers-reduced-motion`.
+- Landing pages may use a more expressive hero and a clear call to action, while ERP workspaces should remain calm, predictable, and easy to scan. Do not import a gallery's promotional framing into a workflow screen.
+- Check the pattern at narrow and wide viewports. Do not reproduce a reference's layout, branding, copy, or artwork, and do not let visual polish weaken accessibility, performance, or role-based access.
+
 ## Required workflow
 
 1. **Understand the task**
    - Identify the user, role, device, page, primary task, and relevant workflow state.
    - Inspect the existing page and components before designing. Reuse shared patterns and respect authorization boundaries.
    - Confirm whether the requested work is visual, behavioral, or both. Do not invent AI, account, or business capabilities from a visual reference.
+   - When researching references, inspect a small, task-relevant set and record which details were observed versus unavailable; do not claim exhaustive review of a large gallery.
 2. **Choose a coherent direction**
    - Use a focused product/style rationale before picking colors, type, layout, and effects.
    - Prefer the existing Fluxo design tokens in `frontend/DESIGN.md`; update the source of truth when intentionally changing the system.
