@@ -1,5 +1,6 @@
 import type { CreateDemandInput, Demand, DemandHistory, DemandStatus, Overview, RegistrationRequest, Role, User } from '../types';
 import { getSupabase } from './supabase';
+import { getAvatarUrl } from './avatar';
 
 type ProfileRow = {
   id: string;
@@ -84,16 +85,13 @@ const requireActiveProfile = async (id: string): Promise<User> => {
         : 'Seu cadastro está aguardando aprovação de um administrador.',
     );
   }
-  return toUser(profile);
+  return { ...toUser(profile), avatarUrl: await getAvatarUrl(id) };
 };
 
 const ensureUpdated = (id: string | null): void => {
   if (!id) throw new Error('Registro não encontrado ou etapa do fluxo não autorizada.');
 };
 
-const ensureUpdatedCount = (count: number | null): void => {
-  if (count !== 1) throw new Error('Registro não encontrado ou etapa do fluxo não autorizada.');
-};
 
 export const api = {
   async login(email: string, password: string): Promise<User> {
@@ -228,53 +226,6 @@ export const api = {
       commercial_responsible_id: authData.user.id,
     });
     if (error) throw new Error(error.message);
-  },
-
-  async approveCommercial(id: string): Promise<void> {
-    const { count, error } = await getSupabase()
-      .from('demands')
-      .update({ status: 'APROVADO_COMERCIAL' }, { count: 'exact' })
-      .eq('id', id)
-      .eq('status', 'ORCAMENTO');
-    if (error) throw new Error(error.message);
-    ensureUpdatedCount(count);
-  },
-
-  async updateFinancial(
-    id: string,
-    update: { paymentTerms: string; costEstimate: number; invoicedValue: number; approved: boolean },
-  ): Promise<void> {
-    const { count, error } = await getSupabase()
-      .from('demands')
-      .update({
-        payment_terms: update.paymentTerms,
-        cost_estimate: update.costEstimate,
-        invoiced_value: update.invoicedValue,
-        financial_approved: update.approved,
-        status: update.approved ? 'ALOCACAO_RH' : 'CANCELADO',
-      }, { count: 'exact' })
-      .eq('id', id)
-      .eq('status', 'APROVADO_COMERCIAL');
-    if (error) throw new Error(error.message);
-    ensureUpdatedCount(count);
-  },
-
-  async updateHr(
-    id: string,
-    update: { requiredRoles: string[]; assignedStaffCount: number; approved: boolean },
-  ): Promise<void> {
-    const { count, error } = await getSupabase()
-      .from('demands')
-      .update({
-        required_roles: update.requiredRoles,
-        assigned_staff_count: update.assignedStaffCount,
-        rh_approved: update.approved,
-        status: update.approved ? 'EM_EXECUCAO' : 'ALOCACAO_RH',
-      }, { count: 'exact' })
-      .eq('id', id)
-      .eq('status', 'ALOCACAO_RH');
-    if (error) throw new Error(error.message);
-    ensureUpdatedCount(count);
   },
 
   async logout(): Promise<void> {
