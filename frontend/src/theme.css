@@ -1,0 +1,74 @@
+:root {
+  color-scheme: light;
+  --panel-surface: #fff;
+  --chart-axis: #656761;
+  --chart-grid: #eeece8;
+  --chart-cursor: #f0efe9;
+  --stage-commercial: #252428;
+}
+.theme-toggle { display: grid; flex: none; place-items: center; width: 42px; height: 42px; padding: 0; border: 1px solid var(--outline); border-radius: 14px; color: var(--on-surface); background: var(--panel-surface); transition: background-color 180ms ease, transform 180ms ease; }
+.theme-toggle:hover { transform: translateY(-1px); background: var(--secondary); }
+.login-theme-control { position: absolute; top: 20px; right: 24px; z-index: 2; }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface: #17191e;
+  --secondary: #2c2f38;
+  --on-surface: #f0f0f4;
+  --on-surface-variant: #b7b9c5;
+  --outline: #3a3e49;
+  --panel-surface: #22252d;
+  --error: #ffaaa9;
+  --focus-ring: #a4afff;
+  --chart-axis: #babdcb;
+  --chart-grid: #373b48;
+  --chart-cursor: #323642;
+  --stage-commercial: #d7dae6;
+}
+/* Explicit surface and text pairs keep charts, forms, and feedback readable. */
+[data-theme="dark"] :is(.horizontal-nav, .topbar-profile, .analytics-panel, .communication, .profile-card, .profile-dialog, .modal, .demand-card, .registration-card, .empty-state, .search-box, .dock-search, .secondary-button) { background: var(--panel-surface); color: var(--on-surface); border-color: var(--outline); }
+[data-theme="dark"] :is(.dock-item, .dock-search input, .dock-search button, .topbar-brand, .topbar-profile-meta strong, .breadcrumb strong, .page-heading h1, .analytics-panel-heading h2, .metric-value, .stage-donut-center strong, .stage-mix-row strong, .stage-count-row strong, .demand-table-trigger strong, .demand-info h3, .flow-step strong, .registration-person strong, .profile-card-heading h2, .profile-fields strong, .modal-heading h2, .empty-state h3, .analytics-empty strong, .communication-heading h2, .conversation-message header strong, .conversation-message p, .history-demand-title, .timeline-top strong) { color: var(--on-surface); }
+[data-theme="dark"] :is(.breadcrumb, .eyebrow, .today-label, .topbar-profile-meta small, .topbar-profile > svg, .page-heading p, .metric-label, .metric-note, .analytics-kicker, .analytics-panel-heading p, .stage-count-label, .stage-mix-label, .stage-donut-center small, .demand-table-trigger small, .recent-empty, .stage-mix-empty, .analytics-empty, .analytics-empty > span, .empty-state p, .field-label, .review-form label, .registration-role, .profile-fields > div > span, .profile-photo-hint, .communication-heading p, .conversation-toolbar, .conversation-message header span, .conversation-message time, .conversation-form-footer, .conversation-empty, .demand-review-form > p, .modal-intro, .demand-info p, .detail-description p, .detail-description > strong, .detail-facts span, .detail-facts b, .timeline-content p, .timeline-content small, .timeline-top time, .results-count) { color: var(--on-surface-variant); }
+[data-theme="dark"] :is(.dock-item:hover, .dock-search-active, .dock-count, .topbar-profile .topbar-avatar, .finance-icon, .profile-security, .conversation-visibility, .conversation-scopes button, .conversation-kind, .profile-card-heading > span, .history-demand-title, .demand-review-form) { background: #30343e; color: #d5d8e3; border-color: var(--outline); }
+[data-theme="dark"] :is(.dock-item-active, .dock-item-active:hover, .conversation-scopes button[aria-pressed="true"]) { color: #fff; background: #5653b8; }
+[data-theme="dark"] :is(.dock-item-active .dock-count, .primary-button) { color: #17191e; background: #c5caff; }
+[data-theme="dark"] .primary-button:hover { background: #dce0ff; }
+[data-theme="dark"] :is(.analytics-summary-grid .metric-card:not(.metric-card-featured)) { background: var(--panel-surface); border-color: var(--outline); }
+[data-theme="dark"] .analytics-summary-grid .metric-card:nth-child(2) { background: #30343e; }
+[data-theme="dark"] .analytics-summary-grid :is(.metric-label, .metric-value, .metric-note, .metric-icon) { color: var(--on-surface); }
+[data-theme="dark"] .analytics-summary-grid .metric-card-featured { background: #a92d17; }
+[data-theme="dark"] .stage-count-track { background: #3b404d; }
+[data-theme="dark"] :is(.analytics-demand-table td, .analytics-demand-table th, td, th) { color: var(--on-surface-variant); border-color: var(--outline); }
+[data-theme="dark"] .demand-table-amount { color: var(--on-surface) !important; }
+[data-theme="dark"] thead { background: #292c35; }
+[data-theme="dark"] :is(tbody tr:hover, .recent-demand:hover) { background: #30343e; }
+[data-theme="dark"] :is(.field-label input, .field-label textarea, .review-form input, .conversation-form select, .registration-role select, .search-box input) { background: #191c23; color: var(--on-surface); border-color: #535967; }
+[data-theme="dark"] :is(input, textarea)::placeholder { color: #a0a5b4; }
+[data-theme="dark"] :is(.conversation-messages, .conversation-message) { background: #1b1e25; border-color: var(--outline); }
+[data-theme="dark"] .conversation-message-own { border-left-color: #a4afff; }
+[data-theme="dark"] :is(.profile-security span strong, .profile-security span small) { color: #c4ddcc; }
+[data-theme="dark"] :is(.profile-photo-status, .account-active) { color: #a3e2c4 !important; }
+[data-theme="dark"] .profile-large-avatar { border-color: var(--panel-surface); }
+[data-theme="dark"] .profile-dialog-close { background: #22252d; color: #fff; border-color: #6c7181; }
+[data-theme="dark"] .profile-fields { border-color: var(--outline); }
+[data-theme="dark"] :is(.alert, .profile-photo-error) { color: #ffb4b1; }
+[data-theme="dark"] .alert { background: #3d242a; border-color: #79515b; }
+[data-theme="dark"] .badge-blue { color: #c6d3ff; background: #303b5a; }
+[data-theme="dark"] .badge-green { color: #abe8c7; background: #22483c; }
+[data-theme="dark"] .badge-amber { color: #f5d6a2; background: #4c3c24; }
+[data-theme="dark"] .badge-purple { color: #dacafa; background: #403354; }
+[data-theme="dark"] .badge-red { color: #ffc1c1; background: #532f38; }
+[data-theme="dark"] .text-button { color: #b6c1ff; }
+[data-theme="dark"] .loading-screen { background: var(--surface); color: var(--on-surface-variant); }
+/* The illustrated login keeps its authored dark form in both workspace themes. */
+[data-theme="dark"] .login-submit { background: #faf9f4; color: #24271f; }
+[data-theme="dark"] .login-submit:hover { background: #e7ddca; }
+[data-theme="dark"] .login-form .field-label { color: #e4e7de; }
+@media (max-width: 600px) {
+  .horizontal-shell .topbar-right { gap: 8px; }
+  .theme-toggle { width: 36px; height: 36px; border-radius: 11px; }
+  .horizontal-shell .breadcrumb { max-width: calc(100% - 220px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle { transition: none; }
+  .theme-toggle:hover { transform: none; }
+}

@@ -10,6 +10,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { useId } from 'react';
 
 interface AnalyticsDatum {
   label: string;
@@ -19,16 +20,16 @@ interface AnalyticsDatum {
 }
 
 interface DataVisualizationProps {
-  mode: 'financial' | 'distribution';
+  mode: 'financial' | 'volume' | 'distribution';
   data: AnalyticsDatum[];
 }
 
 const stageColors: Record<string, string> = {
-  Comercial: '#6277dc',
-  Financeiro: '#ee9b42',
-  'Pessoas & RH': '#51b5d5',
-  Execução: '#8584c8',
-  Encerradas: '#a8adbb',
+  Comercial: 'var(--stage-commercial)',
+  Financeiro: '#ff4c20',
+  'Pessoas & RH': '#777a74',
+  Execução: '#a8aaa4',
+  Encerradas: '#d1d2cc',
 };
 
 const money = (value: number): string =>
@@ -43,28 +44,65 @@ const compactMoney = (value: number): string =>
   }).format(value);
 
 const tooltipStyle = {
-  border: '1px solid #e3e4df',
-  borderRadius: 8,
-  background: '#fff',
-  fontSize: 12,
+  border: '1px solid var(--outline)',
+  borderRadius: 16,
+  background: 'var(--panel-surface)',
+  color: 'var(--on-surface)',
+  fontSize: 13,
+  boxShadow: '0 8px 32px #25242812',
 };
 
 export default function DataVisualization({ mode, data }: DataVisualizationProps) {
+  const gradientId = useId().replace(/:/g, '');
   if (mode === 'financial') {
     return (
-      <ResponsiveContainer width="100%" height={252}>
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 10, right: 6, left: 0, bottom: 0 }} barCategoryGap="24%">
-          <CartesianGrid vertical={false} stroke="#e9e8e2" strokeDasharray="3 5" />
-          <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#656761', fontSize: 11 }} interval={0} />
-          <YAxis axisLine={false} tickLine={false} width={58} tick={{ fill: '#777a74', fontSize: 10 }} tickFormatter={compactMoney} />
+          <CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="2 6" />
+          <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: 'var(--chart-axis)', fontSize: 11 }} interval={0} />
+          <YAxis axisLine={false} tickLine={false} width={58} tick={{ fill: 'var(--chart-axis)', fontSize: 10 }} tickFormatter={compactMoney} />
           <Tooltip
-            cursor={{ fill: '#f0efe9' }}
-            formatter={(value, name) => [money(Number(value)), name === 'budget' ? 'Orçamento' : 'Faturado']}
+            cursor={{ fill: 'var(--chart-cursor)' }}
+            formatter={(value, name) => [money(Number(value)), name === 'Orçamento' ? 'Orçamento' : 'Faturado']}
             contentStyle={tooltipStyle}
-            labelStyle={{ marginBottom: 4, color: '#30312e', fontWeight: 600 }}
+            labelStyle={{ marginBottom: 4, color: 'var(--on-surface)', fontWeight: 600 }}
           />
-          <Bar dataKey="budget" name="Orçamento" fill="#6277dc" radius={[5, 5, 0, 0]} maxBarSize={28} />
-          <Bar dataKey="invoiced" name="Faturado" fill="#ee9b42" radius={[5, 5, 0, 0]} maxBarSize={28} />
+          <defs>
+            <linearGradient id={`${gradientId}-budget`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#6974ef" /><stop offset="100%" stopColor="#c5c9fc" />
+            </linearGradient>
+            <linearGradient id={`${gradientId}-invoiced`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#ff6534" /><stop offset="100%" stopColor="#ffce94" />
+            </linearGradient>
+          </defs>
+          <Bar dataKey="budget" name="Orçamento" fill={`url(#${gradientId}-budget)`} radius={[9, 9, 3, 3]} maxBarSize={44} isAnimationActive={false} />
+          <Bar dataKey="invoiced" name="Faturado" fill={`url(#${gradientId}-invoiced)`} radius={[9, 9, 3, 3]} maxBarSize={44} isAnimationActive={false} />
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  }
+
+  if (mode === 'volume') {
+    return (
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 10, right: 6, left: 0, bottom: 0 }} barCategoryGap="28%">
+          <CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="2 6" />
+          <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: 'var(--chart-axis)', fontSize: 11 }} interval={0} />
+          <YAxis
+            allowDecimals={false}
+            axisLine={false}
+            tickLine={false}
+            width={34}
+            tick={{ fill: 'var(--chart-axis)', fontSize: 10 }}
+          />
+          <Tooltip
+            cursor={{ fill: 'var(--chart-cursor)' }}
+            formatter={(value) => [`${Number(value)} demandas`, 'Quantidade']}
+            contentStyle={tooltipStyle}
+          />
+          <Bar dataKey="count" name="Demandas" radius={[5, 5, 0, 0]} maxBarSize={44} isAnimationActive={false}>
+            {data.map((stage) => <Cell key={stage.label} fill={stageColors[stage.label] ?? '#a8adbb'} />)}
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     );
@@ -73,7 +111,7 @@ export default function DataVisualization({ mode, data }: DataVisualizationProps
   return (
     <ResponsiveContainer width="100%" height="100%">
       <PieChart>
-        <Pie data={data} dataKey="count" nameKey="label" innerRadius="68%" outerRadius="92%" paddingAngle={3} stroke="none">
+        <Pie data={data} dataKey="count" nameKey="label" innerRadius="68%" outerRadius="92%" paddingAngle={5} cornerRadius={5} stroke="none" isAnimationActive={false}>
           {data.map((stage) => <Cell key={stage.label} fill={stageColors[stage.label] ?? '#a8adbb'} />)}
         </Pie>
         <Tooltip

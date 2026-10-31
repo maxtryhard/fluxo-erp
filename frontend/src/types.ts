@@ -3,6 +3,7 @@ export type Role = 'ADMIN' | 'COMERCIAL' | 'FINANCEIRO' | 'RH' | 'GERENCIA';
 export interface User {
   id: string;
   name: string;
+  avatarUrl?: string;
   email: string;
   role: Role;
   department: string;
@@ -71,4 +72,18 @@ export interface Overview {
   totalInvoiced: number;
   byStatus: Record<string, number>;
   activeDemands: number;
+}
+
+export type MessageScope = 'SHARED' | 'FINANCEIRO' | 'RH';
+export type MessageKind = 'MESSAGE' | 'ANALYSIS' | 'QUESTION';
+export type SectorMessage = {
+  id: string;
+  demand_id: string | null;
+  scope: MessageScope;
+  kind: MessageKind;
+  body: string;
+  author_id: string;
+  author_name: string;
+  department: string;
+  created_at: string;
 }
