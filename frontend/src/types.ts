@@ -111,3 +111,33 @@ export type TeamAllocation = {
   created_by: string;
   created_at: string;
 };
+
+export type FinancialDirection = 'RECEIVABLE' | 'PAYABLE';
+export type FinancialEntry = {
+  id: string;
+  batch_id: string;
+  demand_id: string | null;
+  direction: FinancialDirection;
+  description: string;
+  counterparty: string;
+  amount_cents: number;
+  due_on: string;
+  installment_number: number;
+  installment_count: number;
+  notes: string;
+  settled_on: string | null;
+  settled_by: string | null;
+  cancelled_at: string | null;
+  cancellation_reason: string | null;
+  created_by: string;
+  created_at: string;
+};
+export type FinancialEvent = {
+  id: string;
+  entry_id: string;
+  action: 'CREATED' | 'SETTLED' | 'CANCELLED';
+  author_id: string;
+  author_name: string;
+  details: string;
+  created_at: string;
+};

@@ -93,3 +93,24 @@ Para habilitar o módulo ampliado, execute **somente a nova migration** `supabas
 RH e Administração podem alterar; Gerência pode consultar. Comercial e Financeiro não recebem acesso ao cadastro ou às alocações. Os formulários e funções existentes de Comercial e Financeiro são preservados. Sem a migration, a nova tela de RH informa configuração pendente; as outras áreas continuam funcionando.
 
 `supabase/tests/people_allocation.sql` contém testes de leitura por perfil, bloqueio de escrita, capacidade, reservas simultâneas/sequenciais, cancelamento e confirmação de equipe. Execute somente em banco Supabase de teste após aplicar as migrations; todos os dados de teste são revertidos por rollback. Os testes SQL não foram executados no ambiente local sem PostgreSQL/Supabase CLI.
+
+## Painel financeiro e contas
+
+Execute **somente a nova migration** `supabase/migrations/20261031030000_finance_dashboard.sql` após as migrations anteriores para habilitar o painel e as contas. O SQL foi validado em PostgreSQL temporário com uma simulação local do esquema Auth; isso não executa nem altera seu Supabase real. A publicação segue `feature/finance-dashboard` → PR para `develop` → PR para `main`.
+
+- **Visão financeira:** recebido, pago e resultado por data efetiva, compromissos em aberto, contas vencidas e próximos vencimentos. O resultado não é saldo bancário. Orçamento e faturamento não são tratados como dinheiro recebido.
+- **Revisões:** mantém o formulário anterior e o encaminhamento ao RH. O novo cadastro de contas não altera a etapa de uma demanda.
+- **Contas a receber / pagar:** cadastro manual, com cliente/fornecedor, vencimento, parcelas mensais, demanda opcional e observações. A soma das parcelas preserva os centavos. Vincule somente demandas aprovadas pelo Comercial e não canceladas.
+- **Baixas:** confirmação manual integral de cada parcela, por data efetiva. Não realiza transferência bancária, pagamento parcial ou estorno de baixas. Contas em aberto podem ser canceladas com motivo. Os históricos são preservados.
+
+Financeiro e Administração alteram; Gerência consulta. Comercial e RH não podem ler as tabelas financeiras. Contas e eventos não podem ser escritos diretamente pelo cliente; os RPCs inferem o autor, validam a entrada e evitam duplicação ao repetir o mesmo envio de cadastro.
+
+Validação dos cálculos:
+
+```sh
+npm run test:finance --workspace=frontend
+```
+
+Os testes SQL em `supabase/tests/finance_dashboard.sql` verificam divisão exata de parcelas, vencimento no fim do mês, reenvio idempotente, permissões por perfil, baixas e cancelamentos inválidos, trilha de auditoria e preservação da etapa das demandas. Execute somente em Supabase de teste; as fixtures são revertidas por rollback.
+
+Para manutenção manual desta área: altere `frontend/src/components/FinanceOverview.tsx` para os indicadores; `FinanceForms.tsx` para os formulários; `FinancePage.tsx` para abas e filtros; `frontend/src/services/finance.ts` para solicitações; e `frontend/src/utils/finance.ts` para cálculos. Alterações futuras no banco devem entrar em uma nova migration, sem reexecutar ou editar scripts já aplicados.

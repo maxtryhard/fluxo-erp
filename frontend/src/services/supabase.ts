@@ -1,11 +1,13 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import type { DemandStatus, Role, SectorMessage, Employee, TeamAllocation } from '../types';
+import type { DemandStatus, Role, SectorMessage, Employee, TeamAllocation, FinancialEntry, FinancialEvent } from '../types';
 
 type AccountStatus = 'PENDING' | 'ACTIVE' | 'REJECTED';
 
 interface Database {
   public: {
     Tables: {
+      financial_entries: { Row: FinancialEntry; Insert: never; Update: never; Relationships: [] };
+      financial_entry_events: { Row: FinancialEvent; Insert: never; Update: never; Relationships: [] };
       employees: { Row: Employee; Insert: never; Update: never; Relationships: [] };
       team_allocations: { Row: TeamAllocation; Insert: never; Update: never; Relationships: [] };
       sector_messages: {
@@ -83,6 +85,12 @@ interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      create_financial_entries: {
+        Args: { p_batch: string; p_direction: string; p_description: string; p_counterparty: string; p_total_cents: number; p_first_due: string; p_installments: number; p_demand: string | null; p_notes: string };
+        Returns: string;
+      };
+      settle_financial_entry: { Args: { p_id: string; p_settled_on: string }; Returns: undefined };
+      cancel_financial_entry: { Args: { p_id: string; p_reason: string }; Returns: undefined };
       save_employee: {
         Args: { p_id: string | null; p_name: string; p_job_title: string; p_skills: string[]; p_capacity: number; p_active: boolean };
         Returns: string;
