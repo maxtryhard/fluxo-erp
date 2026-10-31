@@ -155,3 +155,15 @@ Allocations bind a named person to a demand awaiting RH, with function, inclusiv
 Demandas recebidas reuses the existing demand card, conversation, and audit-history controls. RH confirms named allocations with a written opinion; a dedicated RPC derives the distinct person count/functions and calls the existing transactional handoff. The previous count is a snapshot at confirmation; later cancellations are tracked in allocations and history. The Commercial and Financial review forms and transition functions are not changed.
 
 The new feature requires only `20261031020000_people_allocation.sql` after the prior migrations. No production release or database migration is performed as part of local interface development. Staffing-specific styles inherit theme tokens and adapt forms, summary cards, and records to narrow screens.
+
+## Finance workspace
+
+Financeiro now has Visão financeira, Revisões, Contas a receber, and Contas a pagar. Preserve the existing demand review card, forms, audit history, and Commercial → Financial → HR transitions; account bookkeeping never changes a demand's workflow stage. Financeiro and Administração manage accounts; Gerência has read-only access. Comercial and RH cannot read ledger entries or financial-entry events.
+
+The dashboard separates recorded receipts/payments from budget, invoiced values, and estimates. Realized totals use settlement dates inside the selected inclusive period. The result is receipts minus payments, not a bank balance. Outstanding commitments and overdue counts explicitly cover all due dates. Actual monthly movements, overdue accounts, and upcoming due dates use only recorded entries. Unknown totals use dashes while configuration/data is unavailable.
+
+Accounts accept description, customer/supplier, exact total cents, first due date, 1–60 monthly installments, an optional demand link, and notes. End-of-month dates are clamped independently from the original first due date; installment cents sum exactly to the total. Each form retains a request UUID for retry-safe creation. Do not automatically generate commitments from a demand's invoiced value or infer actual receipts from its approval.
+
+Settlement is a manual, full-value confirmation per installment with a nonfuture effective date. The interface does not initiate bank transfers or support partial payments, bank reconciliation, or reversal of settled records. Open accounts can be cancelled with a reason, without deleting historical records. Creation, settlement, and cancellation generate immutable financial audit events and Financial-scoped demand history where linked. All mutations are transactional, authorized and validated server-side.
+
+This addition requires `20261031030000_finance_dashboard.sql`. Existing revisions remain usable even if the new ledger is not configured. Component boundaries: `FinancePage` routes financial sections, `FinanceOverview` renders recorded totals, `FinanceForms` manages account actions, `services/finance.ts` handles requests, and `utils/finance.ts` contains pure cent/date/aggregation logic.

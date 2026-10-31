@@ -24,6 +24,7 @@ import { ProfileCard, ProfileDialog, UserAvatar } from './components/ProfileCard
 import { Communication } from './components/Communication';
 import { ThemeToggle } from './components/ThemeToggle';
 import { PeoplePage } from './components/PeoplePage';
+import { FinancePage } from './components/FinancePage';
 import { DemandReview } from './components/DemandReview';
 import type { CreateDemandInput, Demand, DemandHistory, DemandStatus, Overview, RegistrationRequest, Role, User } from './types';
 
@@ -83,7 +84,7 @@ const navGroups: { label: string; items: { page: Page; label: string; icon: type
       { page: 'demands', label: 'Demandas', icon: ClipboardList },
       { page: 'chat', label: 'Conversas', icon: MessageSquare, keywords: ['chat', 'mensagens', 'setores'] },
       { page: 'commercial', label: 'Comercial', icon: BriefcaseBusiness, roles: ['ADMIN', 'COMERCIAL'] },
-      { page: 'finance', label: 'Financeiro', icon: CircleDollarSign, roles: ['ADMIN', 'FINANCEIRO'] },
+      { page: 'finance', label: 'Financeiro', icon: CircleDollarSign, roles: ['ADMIN', 'FINANCEIRO', 'GERENCIA'] },
       { page: 'people', label: 'Pessoas & RH', icon: Users, roles: ['ADMIN', 'RH', 'GERENCIA'] },
     ],
   },
@@ -319,6 +320,8 @@ function App() {
             <RegistrationRequestsPage requests={registrationRequests} onApprove={(id, role) => void runAction(() => api.approveRegistration(id, role))} onReject={(id) => void runAction(() => api.rejectRegistration(id))} />
           ) : page === 'profile' ? (
             <ProfilePage user={user} onAvatarChange={updateAvatar} />
+          ) : page === 'finance' ? (
+            <FinancePage user={user} demands={demands} onRefresh={refresh} renderDemand={(demand) => <DemandCard demand={demand} user={user} page="finance" showReview={user.role !== 'GERENCIA'} onHistory={() => void showHistory(demand)} onRefresh={refresh} />} />
           ) : page === 'people' ? (
             <PeoplePage user={user} demands={demands} onRefresh={refresh} renderDemand={(demand) => <DemandCard demand={demand} user={user} page="people" showReview={false} onHistory={() => void showHistory(demand)} onRefresh={refresh} />} />
           ) : page === 'overview' ? (
