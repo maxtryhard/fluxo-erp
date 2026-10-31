@@ -6,13 +6,12 @@ import {
   BriefcaseBusiness,
   Check,
   ChevronDown,
-  ChevronRight,
   CircleDollarSign,
   ClipboardList,
   FileText,
   LayoutDashboard,
   LogOut,
-  Menu,
+  MessageSquare,
   Plus,
   Search,
   ShieldCheck,
@@ -21,14 +20,19 @@ import {
   X,
 } from 'lucide-react';
 import { api } from './services/api';
+import { ProfileCard, ProfileDialog, UserAvatar } from './components/ProfileCard';
+import { Communication } from './components/Communication';
+import { ThemeToggle } from './components/ThemeToggle';
+import { DemandReview } from './components/DemandReview';
 import type { CreateDemandInput, Demand, DemandHistory, DemandStatus, Overview, RegistrationRequest, Role, User } from './types';
 
 const DataVisualization = lazy(() => import('./components/DataVisualization'));
 
-type Page = 'overview' | 'demands' | 'commercial' | 'finance' | 'people' | 'registrations' | 'profile';
+type Page = 'overview' | 'demands' | 'commercial' | 'finance' | 'people' | 'registrations' | 'profile' | 'chat';
 
 const pageLabels: Record<Page, string> = {
   overview: 'Visão geral',
+  chat: 'Conversas',
   demands: 'Todas as demandas',
   commercial: 'Comercial',
   finance: 'Financeiro',
@@ -57,7 +61,7 @@ const date = (value: string): string =>
 const todayLabel = (): string =>
   new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }).format(new Date());
 
-const stageChartColors = ['#6277dc', '#ee9b42', '#51b5d5', '#8584c8', '#a8adbb'];
+const stageChartColors = ['var(--stage-commercial)', '#ff4c20', '#777a74', '#a8aaa4', '#d1d2cc'];
 
 const roleLabels: Record<Role, string> = {
   ADMIN: 'Administrador',
@@ -76,6 +80,7 @@ const navGroups: { label: string; items: { page: Page; label: string; icon: type
     label: 'Operação',
     items: [
       { page: 'demands', label: 'Demandas', icon: ClipboardList },
+      { page: 'chat', label: 'Conversas', icon: MessageSquare, keywords: ['chat', 'mensagens', 'setores'] },
       { page: 'commercial', label: 'Comercial', icon: BriefcaseBusiness, roles: ['ADMIN', 'COMERCIAL'] },
       { page: 'finance', label: 'Financeiro', icon: CircleDollarSign, roles: ['ADMIN', 'FINANCEIRO'] },
       { page: 'people', label: 'Pessoas & RH', icon: Users, roles: ['ADMIN', 'RH'] },
@@ -103,7 +108,9 @@ function App() {
   const [showCreate, setShowCreate] = useState(false);
   const [historyDemand, setHistoryDemand] = useState<Demand | null>(null);
   const [history, setHistory] = useState<DemandHistory[]>([]);
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [navSearchOpen, setNavSearchOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const updateAvatar = (url: string) => setUser((current) => current ? { ...current, avatarUrl: url } : current);
   const [navSearch, setNavSearch] = useState('');
 
   const refresh = useCallback(async () => {
@@ -248,90 +255,69 @@ function App() {
   const totalInvoiced = overview?.totalInvoiced ?? demands.reduce((sum, item) => sum + (item.invoicedValue ?? 0), 0);
 
   return (
-    <div className="app-shell">
-      <aside className={`sidebar ${mobileNavOpen ? 'sidebar-open' : ''}`}>
-        <a className="brand" href="#" onClick={(event) => { event.preventDefault(); setPage('overview'); setMobileNavOpen(false); }}>
-          <span className="brand-icon"><Activity size={21} strokeWidth={2.4} /></span>
-          <span>fluxo<span className="brand-period">.</span><small>GESTÃO INTEGRADA</small></span>
-        </a>
-        <div className="workspace-context">
-          <span className="workspace-context-icon"><Activity size={16} /></span>
-          <span><strong>Operação integrada</strong><small>Comercial · Financeiro · RH</small></span>
-        </div>
-        <label className="nav-search">
-          <Search size={16} aria-hidden="true" />
-          <input
-            type="search"
-            aria-label="Buscar páginas do menu"
-            placeholder="Buscar páginas..."
-            value={navSearch}
-            onChange={(event) => setNavSearch(event.target.value)}
-          />
-          {navSearch && <button type="button" aria-label="Limpar busca do menu" onClick={() => setNavSearch('')}><X size={15} /></button>}
-        </label>
-        <nav className="main-nav" aria-label="Navegação principal">
-          {visibleNavGroups.length ? visibleNavGroups.map((group) => (
-            <section className="nav-section" key={group.label}>
-              <h2 className="nav-section-title">{group.label}</h2>
-              <div className="nav-section-items">
-                {group.items.map(({ page: itemPage, label, icon: Icon }) => (
-                  <button
-                    key={itemPage}
-                    className={`nav-item ${page === itemPage ? 'nav-item-active' : ''}`}
-                    aria-current={page === itemPage ? 'page' : undefined}
-                    onClick={() => { setPage(itemPage); setNavSearch(''); setMobileNavOpen(false); }}
-                  >
-                    <span className="nav-item-icon"><Icon size={17} strokeWidth={1.8} /></span>
-                    <span className="nav-item-label">{label}</span>
-                    {itemPage === 'demands' && <span className="nav-count" aria-label={`${requestCount} demandas ativas`}>{requestCount}</span>}
-                    {itemPage === 'registrations' && registrationRequests.length > 0 && <span className="nav-count" aria-label={`${registrationRequests.length} cadastros pendentes`}>{registrationRequests.length}</span>}
-                    {page === itemPage && <ChevronRight className="nav-item-current" size={16} aria-hidden="true" />}
-                  </button>
-                ))}
-              </div>
-            </section>
-          )) : (
-            <p className="nav-no-results" role="status">Nenhuma página encontrada.</p>
-          )}
-        </nav>
-        <div className="sidebar-bottom">
-          <button className="sidebar-logout" onClick={() => void handleLogout()}><LogOut size={16} />Sair da conta</button>
-        </div>
-      </aside>
-      {mobileNavOpen && <button className="mobile-overlay" aria-label="Fechar menu" onClick={() => setMobileNavOpen(false)} />}
+    <div className="app-shell horizontal-shell">
       <main className="main-area">
         <header className="topbar">
-          <button className="mobile-menu" aria-label="Abrir menu" onClick={() => setMobileNavOpen(true)}><Menu size={21} /></button>
           <a
             className="brand topbar-brand"
             href="#"
             aria-label="Fluxo — ir para Visão geral"
-            onClick={(event) => { event.preventDefault(); setPage('overview'); setMobileNavOpen(false); }}
+            onClick={(event) => { event.preventDefault(); setPage('overview'); }}
           >
             <span className="brand-icon"><Activity size={18} strokeWidth={2.2} /></span>
             <span>fluxo<span className="brand-period">.</span><small>GESTÃO INTEGRADA</small></span>
           </a>
           <div className="breadcrumb"><span>Workspace</span><span className="crumb-separator">/</span><strong>{pageTitle}</strong></div>
           <div className="topbar-right">
+            <ThemeToggle />
             <span className="today-label">{date(new Date().toISOString())}</span>
             <button
               className="topbar-profile"
               type="button"
               aria-label={`Abrir perfil de ${user.name}, ${roleLabels[user.role]}`}
-              onClick={() => setPage('profile')}
+              aria-haspopup="dialog"
+              aria-expanded={profileOpen}
+              aria-controls={profileOpen ? 'account-profile-dialog' : undefined}
+              onClick={() => setProfileOpen(true)}
             >
-              <span className="topbar-avatar">{user.name.slice(0, 1).toUpperCase()}</span>
+              <UserAvatar user={user} className="topbar-avatar" />
               <span className="topbar-profile-meta"><strong>{user.name}</strong><small>{roleLabels[user.role]}</small></span>
               <ChevronDown size={15} aria-hidden="true" />
             </button>
           </div>
         </header>
+        <div className="navigation-bar">
+          <nav className="horizontal-nav" aria-label="Navegação principal">
+            {visibleNavGroups.flatMap((group) => group.items).map(({ page: itemPage, label, icon: Icon }) => (
+              <button key={itemPage} type="button" className={`dock-item ${page === itemPage ? 'dock-item-active' : ''}`}
+                aria-label={label} aria-current={page === itemPage ? 'page' : undefined} title={label}
+                onClick={() => { setPage(itemPage); setNavSearch(''); setNavSearchOpen(false); }}>
+                <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
+                <span className="dock-label">{label}</span>
+                {itemPage === 'registrations' && registrationRequests.length > 0 && <span className="dock-count" aria-label={`${registrationRequests.length} cadastros pendentes`}>{registrationRequests.length}</span>}
+              </button>
+            ))}
+            {!visibleNavGroups.length && <span className="dock-empty" role="status">Nenhuma página encontrada.</span>}
+            <span className="dock-divider" aria-hidden="true" />
+            <button type="button" className={`dock-item dock-utility ${navSearchOpen ? 'dock-search-active' : ''}`} aria-label="Buscar páginas" title="Buscar páginas"
+              aria-expanded={navSearchOpen} aria-controls="navigation-search" onClick={() => { setNavSearchOpen((open) => !open); setNavSearch(''); }}><Search size={18} /></button>
+            <button type="button" className="dock-item dock-utility dock-logout" aria-label="Sair da conta" title="Sair da conta" onClick={() => void handleLogout()}><LogOut size={18} /></button>
+          </nav>
+          {navSearchOpen && <label className="dock-search" id="navigation-search"><Search size={16} aria-hidden="true" />
+            <input type="search" aria-label="Buscar páginas do menu" placeholder="Buscar páginas..." value={navSearch} autoFocus onChange={(event) => setNavSearch(event.target.value)}
+              onKeyDown={(event) => { if (event.key === 'Escape') { setNavSearchOpen(false); setNavSearch(''); } }} />
+            <button type="button" aria-label="Fechar busca" onClick={() => { setNavSearchOpen(false); setNavSearch(''); }}><X size={16} /></button>
+          </label>}
+        </div>
         <div className="page-content">
+          <div className="page-transition" key={page}>
           {error && <div className="alert" role="alert"><span>{error}</span><button aria-label="Fechar aviso" onClick={() => setError('')}><X size={16} /></button></div>}
-          {page === 'registrations' ? (
+          {page === 'chat' ? (
+            <section><div className="page-heading"><div><div className="eyebrow">COLABORAÇÃO</div><h1>Conversas</h1><p>Contexto compartilhado para uma operação conectada.</p></div></div><Communication user={user} /></section>
+          ) : page === 'registrations' ? (
             <RegistrationRequestsPage requests={registrationRequests} onApprove={(id, role) => void runAction(() => api.approveRegistration(id, role))} onReject={(id) => void runAction(() => api.rejectRegistration(id))} />
           ) : page === 'profile' ? (
-            <ProfilePage user={user} />
+            <ProfilePage user={user} onAvatarChange={updateAvatar} />
           ) : page === 'overview' ? (
             <OverviewPage user={user} demands={demands} activeCount={requestCount} totalBudget={totalBudget} totalInvoiced={totalInvoiced} onOpenDemands={() => setPage('demands')} onHistory={showHistory} />
           ) : (
@@ -347,14 +333,16 @@ function App() {
               {filteredDemands.length ? (
                 <div className="demand-list">
                   {filteredDemands.map((item) => (
-                    <DemandCard key={item.id} demand={item} page={page} onHistory={() => void showHistory(item)} onCommercialApprove={() => void runAction(() => api.approveCommercial(item.id))} onFinancial={(data) => void runAction(() => api.updateFinancial(item.id, data))} onHr={(data) => void runAction(() => api.updateHr(item.id, data))} />
+                    <DemandCard key={item.id} demand={item} user={user} page={page} onHistory={() => void showHistory(item)} onRefresh={refresh} />
                   ))}
                 </div>
               ) : <EmptyState page={page} onCreate={() => setShowCreate(true)} />}
             </section>
           )}
+          </div>
         </div>
       </main>
+      {profileOpen && <ProfileDialog user={user} roleLabel={roleLabels[user.role]} onAvatarChange={updateAvatar} onClose={() => setProfileOpen(false)} />}
       {showCreate && <CreateDemandModal onClose={() => setShowCreate(false)} onSubmit={(data) => runAction(async () => { await api.createDemand(data); setShowCreate(false); setPage('demands'); })} />}
       {historyDemand && <HistoryModal demand={historyDemand} history={history} onClose={() => setHistoryDemand(null)} />}
     </div>
@@ -407,6 +395,9 @@ function LoginScreen({ onLogin, onRegister, error }: {
   };
   return (
     <div className="login-layout">
+      <div className="login-theme-control"><ThemeToggle /></div>
+      <div className="login-landscape" aria-hidden="true" />
+      <div className="login-scene-caption" aria-hidden="true"><span>CONEXÕES QUE MOVEM</span><strong>Um fluxo.<br />Novas possibilidades.</strong><small>Comercial · Financeiro · Pessoas</small></div>
       <section className="login-panel">
         <header className="login-header">
           <a className="brand login-brand" href="#" onClick={(event) => event.preventDefault()}>
@@ -456,33 +447,7 @@ function LoginScreen({ onLogin, onRegister, error }: {
           <span><ShieldCheck size={15} /> Conexão protegida</span>
         </footer>
       </section>
-      <aside className="login-story" aria-label="Etapas do fluxo de trabalho">
-        <div className="login-story-content">
-          <span className="story-label"><span /> UMA OPERAÇÃO CONECTADA</span>
-          <h2>Uma demanda.<br />Três áreas.<br /><span>Um fluxo claro.</span></h2>
-          <p>Do primeiro contato à entrega, cada equipe sabe o que fazer e o que acontece em seguida.</p>
-          <div className="journey-card">
-            <div className="journey-step">
-              <span className="journey-icon"><BriefcaseBusiness size={18} /></span>
-              <span><strong>Comercial</strong><small>Proposta e orçamento</small></span>
-              <span className="journey-index">01</span>
-            </div>
-            <div className="journey-connector" />
-            <div className="journey-step">
-              <span className="journey-icon"><CircleDollarSign size={18} /></span>
-              <span><strong>Financeiro</strong><small>Análise e faturamento</small></span>
-              <span className="journey-index">02</span>
-            </div>
-            <div className="journey-connector" />
-            <div className="journey-step">
-              <span className="journey-icon"><Users size={18} /></span>
-              <span><strong>Pessoas & RH</strong><small>Alocação e entrega</small></span>
-              <span className="journey-index">03</span>
-            </div>
-          </div>
-          <div className="story-foot"><ShieldCheck size={16} /> Histórico compartilhado em cada etapa</div>
-        </div>
-      </aside>
+
     </div>
   );
 }
@@ -511,6 +476,7 @@ function OverviewPage({ user, demands, activeCount, totalBudget, totalInvoiced, 
   });
   const recent = demands.slice(0, 5);
   const stagesWithDemands = stageSummary.filter((stage) => stage.count > 0);
+  const maxStageCount = Math.max(...stageSummary.map((stage) => stage.count), 1);
 
   return (
     <section className="analytics-dashboard">
@@ -519,105 +485,132 @@ function OverviewPage({ user, demands, activeCount, totalBudget, totalInvoiced, 
         <button className="primary-button" onClick={onOpenDemands}><FileText size={16} /> Abrir demandas <ArrowRight size={15} /></button>
       </div>
 
-      <div className={`analytics-top-grid ${canSeeFinancialData ? '' : 'analytics-top-grid-limited'}`}>
-        {canSeeFinancialData && <section className="analytics-panel stage-analytics" aria-labelledby="stage-analytics-title">
+      <div className="analytics-summary-grid" aria-label="Indicadores da operação">
+        <MetricCard icon={ClipboardList} label="Demandas cadastradas" value={String(demands.length)} note="No fluxo integrado" tone="orange" featured />
+        <MetricCard
+          icon={Activity}
+          label="Demandas ativas"
+          value={String(activeCount)}
+          note={`${demands.length} ${demands.length === 1 ? 'demanda cadastrada' : 'demandas cadastradas'}`}
+          tone="green"
+        />
+        {canSeeBudget && <MetricCard icon={CircleDollarSign} label="Orçamento total" value={money(totalBudget)} note="Soma das demandas" tone="blue" />}
+        {canSeeFinancialData && <MetricCard icon={ArrowDownToLine} label="Total faturado" value={money(totalInvoiced)} note="Valores registrados" tone="orange" />}
+      </div>
+
+      <div className="analytics-content-grid">
+        <section className="analytics-panel stage-analytics" aria-labelledby="stage-analytics-title">
           <div className="analytics-panel-heading">
-            <div><span className="analytics-kicker">FINANCEIRO</span><h2 id="stage-analytics-title">Orçamento e faturamento por etapa</h2><p>Valores registrados por área do fluxo</p></div>
+            <div>
+              <span className="analytics-kicker">{canSeeFinancialData ? 'FINANCEIRO' : 'OPERAÇÃO'}</span>
+              <h2 id="stage-analytics-title">{canSeeFinancialData ? 'Orçamento e faturamento por etapa' : 'Demandas por etapa'}</h2>
+              <p>{canSeeFinancialData ? 'Valores registrados por área do fluxo' : 'Volume atual em cada etapa do fluxo'}</p>
+            </div>
             <span className="chart-total"><strong>{demands.length}</strong><small>no total</small></span>
           </div>
           {demands.length ? (
-            <div className="stage-chart" role="img" aria-label="Gráfico de orçamento e valores faturados agrupados por etapa atual">
+            <div className="stage-chart" role="img" aria-label={canSeeFinancialData ? 'Gráfico de orçamento e valores faturados agrupados por etapa atual' : 'Gráfico da quantidade de demandas agrupadas por etapa atual'}>
               <Suspense fallback={<div className="chart-placeholder" role="status">Carregando gráfico...</div>}>
-                <DataVisualization mode="financial" data={stageSummary} />
+                <DataVisualization mode={canSeeFinancialData ? 'financial' : 'volume'} data={stageSummary} />
               </Suspense>
-              <div className="chart-legend">
-                <span><i className="legend-budget" /> Orçamento</span>
-                <span><i className="legend-invoiced" /> Faturado</span>
-              </div>
+              {canSeeFinancialData && <div className="chart-legend">
+                <span><i className="legend-budget" style={{ backgroundColor: '#6974ef' }} /> Orçamento</span>
+                <span><i className="legend-invoiced" style={{ backgroundColor: '#ff6534' }} /> Faturado</span>
+              </div>}
             </div>
           ) : (
             <div className="analytics-empty"><ClipboardList size={22} /><strong>Seu fluxo começa aqui</strong><span>Cadastre uma demanda para acompanhar a operação por etapa.</span><button className="text-button" onClick={onOpenDemands}>Ver demandas <ArrowRight size={14} /></button></div>
           )}
-        </section>}
-
-        <aside className={`analytics-kpis ${canSeeFinancialData ? '' : 'analytics-kpis-limited'}`} aria-label="Indicadores da operação">
-          {canSeeBudget && <MetricCard icon={CircleDollarSign} label="Orçamento total" value={money(totalBudget)} note="Soma das demandas" tone="blue" />}
-          {canSeeFinancialData && <MetricCard icon={ArrowDownToLine} label="Total faturado" value={money(totalInvoiced)} note="Valores registrados" tone="orange" />}
-          <MetricCard icon={ClipboardList} label="Demandas ativas" value={String(activeCount)} note={`${demands.length} demandas cadastradas`} tone="green" />
-        </aside>
-      </div>
-
-      <div className="analytics-bottom-grid">
-        <section className="analytics-panel stage-mix-analytics" aria-labelledby="stage-mix-title">
-          <div className="analytics-panel-heading compact">
-            <div><span className="analytics-kicker">OPERAÇÃO</span><h2 id="stage-mix-title">Distribuição por etapa</h2><p>Volume atual de demandas</p></div>
-            <span className="finance-icon"><Activity size={19} /></span>
-          </div>
-          {stagesWithDemands.length ? (
-            <div className="stage-mix-content">
-              <div className="stage-donut" role="img" aria-label={`Distribuição de ${demands.length} demandas por etapa`}>
-                <Suspense fallback={<div className="chart-placeholder" role="status">Carregando gráfico...</div>}>
-                  <DataVisualization mode="distribution" data={stagesWithDemands} />
-                </Suspense>
-                <span className="stage-donut-center"><strong>{demands.length}</strong><small>demandas</small></span>
-              </div>
-              <div className="stage-mix-legend">
-                {stageSummary.map((stage, index) => (
-                  <div className="stage-mix-row" key={stage.label}>
-                    <span className="stage-mix-label"><i style={{ backgroundColor: stageChartColors[index] }} />{stage.label}</span>
-                    <strong>{stage.count}</strong>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="stage-mix-empty">Os dados por etapa aparecerão quando houver demandas.</div>
-          )}
         </section>
 
-        <section className="analytics-panel recent-analytics" aria-labelledby="recent-analytics-title">
+        <div className="analytics-side-stack">
+          <section className="analytics-panel stage-mix-analytics" aria-labelledby="stage-mix-title">
+            <div className="analytics-panel-heading compact">
+              <div><span className="analytics-kicker">OPERAÇÃO</span><h2 id="stage-mix-title">Distribuição por etapa</h2></div>
+              <span className="finance-icon"><Activity size={19} /></span>
+            </div>
+            {stagesWithDemands.length ? (
+              <div className="stage-mix-content">
+                <div className="stage-donut" role="img" aria-label={`Distribuição de ${demands.length} demandas por etapa`}>
+                  <Suspense fallback={<div className="chart-placeholder" role="status">Carregando gráfico...</div>}>
+                    <DataVisualization mode="distribution" data={stagesWithDemands} />
+                  </Suspense>
+                  <span className="stage-donut-center"><strong>{demands.length}</strong><small>demandas</small></span>
+                </div>
+                <div className="stage-mix-legend">
+                  {stageSummary.map((stage, index) => (
+                    <div className="stage-mix-row" key={stage.label}>
+                      <span className="stage-mix-label"><i style={{ backgroundColor: stageChartColors[index] }} />{stage.label}</span>
+                      <strong>{stage.count}</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="stage-mix-empty">Os dados por etapa aparecerão quando houver demandas.</div>
+            )}
+          </section>
+
+          <section className="analytics-panel stage-counts-panel" aria-labelledby="stage-counts-title">
+            <div className="analytics-panel-heading compact">
+              <div><span className="analytics-kicker">FLUXO ATUAL</span><h2 id="stage-counts-title">Demandas por etapa</h2></div>
+            </div>
+            <div className="stage-count-list">
+              {stageSummary.map((stage, index) => (
+                <div className="stage-count-row" key={stage.label}>
+                  <span className="stage-count-label">{stage.label}</span>
+                  <span className="stage-count-track" aria-hidden="true">
+                    <span style={{ width: `${(stage.count / maxStageCount) * 100}%`, backgroundColor: stageChartColors[index] }} />
+                  </span>
+                  <strong aria-label={`${stage.count} demandas`}>{stage.count}</strong>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <section className="analytics-panel recent-analytics" aria-labelledby="recent-analytics-title">
           <div className="analytics-panel-heading compact">
             <div><span className="analytics-kicker">ACOMPANHAMENTO</span><h2 id="recent-analytics-title">Demandas recentes</h2><p>Últimas atualizações da operação</p></div>
             <button className="text-button" onClick={onOpenDemands}>Ver todas <ArrowRight size={14} /></button>
           </div>
           {recent.length ? (
-            <div className="recent-demand-list">
-              {recent.map((demand) => (
-                <button className="recent-demand" key={demand.id} onClick={() => onHistory(demand)}>
-                  <span className="recent-demand-mark"><FileText size={16} /></span>
-                  <span className="recent-demand-details"><strong>{demand.title}</strong><small>{demand.code} · {demand.clientName}</small></span>
-                  <StatusBadge status={demand.status} />
-                  {demand.budgetTotal !== undefined && <span className="recent-demand-value">{money(demand.budgetTotal)}</span>}
-                </button>
-              ))}
+            <div className="analytics-table-wrap">
+              <table className="analytics-demand-table">
+                <thead>
+                  <tr><th>Demanda</th><th>Cliente</th><th>Status</th>{canSeeBudget && <th>Orçamento</th>}</tr>
+                </thead>
+                <tbody>
+                  {recent.map((demand) => (
+                    <tr key={demand.id}>
+                      <td><button className="demand-table-trigger" onClick={() => onHistory(demand)} aria-label={`Ver histórico da demanda ${demand.code}`}>
+                        <strong>{demand.title}</strong><small>{demand.code}</small>
+                      </button></td>
+                      <td>{demand.clientName}</td>
+                      <td><StatusBadge status={demand.status} /></td>
+                      {canSeeBudget && <td className="demand-table-amount">{demand.budgetTotal === undefined ? '—' : money(demand.budgetTotal)}</td>}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           ) : (
             <div className="recent-empty">As demandas cadastradas aparecerão aqui.</div>
           )}
-        </section>
-      </div>
+      </section>
     </section>
   );
 }
 
-function MetricCard({ icon: Icon, label, value, note, tone }: { icon: typeof Activity; label: string; value: string; note: string; tone: string }) {
-  return <div className="metric-card"><div className={`metric-icon metric-${tone}`}><Icon size={18} /></div><span className="metric-label">{label}</span><strong className="metric-value">{value}</strong><span className="metric-note">{note}</span></div>;
+function MetricCard({ icon: Icon, label, value, note, tone, featured = false }: { icon: typeof Activity; label: string; value: string; note: string; tone: string; featured?: boolean }) {
+  return <div className={`metric-card ${featured ? 'metric-card-featured' : ''}`}><div className={`metric-icon metric-${tone}`}><Icon size={18} /></div><span className="metric-label">{label}</span><strong className="metric-value">{value}</strong><span className="metric-note">{note}</span></div>;
 }
 
-function DemandCard({ demand, page, onHistory, onCommercialApprove, onFinancial, onHr }: {
-  demand: Demand; page: Page; onHistory: () => void; onCommercialApprove: () => void;
-  onFinancial: (data: { paymentTerms: string; costEstimate: number; invoicedValue: number; approved: boolean }) => void;
-  onHr: (data: { requiredRoles: string[]; assignedStaffCount: number; approved: boolean }) => void;
+function DemandCard({ demand, user, page, onHistory, onRefresh }: {
+  demand: Demand; user: User; page: Page; onHistory: () => void; onRefresh: () => Promise<void>;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [terms, setTerms] = useState(demand.paymentTerms ?? '');
-  const [cost, setCost] = useState(String(demand.costEstimate ?? 0));
-  const [invoiced, setInvoiced] = useState(String(demand.invoicedValue ?? demand.budgetTotal));
-  const [roles, setRoles] = useState((demand.requiredRoles ?? []).join(', '));
-  const [staff, setStaff] = useState(String(demand.assignedStaffCount ?? 0));
-  const [showAction, setShowAction] = useState(false);
-  const canReviewFinance = page === 'finance';
-  const canReviewHr = page === 'people';
   return (
     <article className="demand-card">
       <div className="demand-card-main">
@@ -633,10 +626,8 @@ function DemandCard({ demand, page, onHistory, onCommercialApprove, onFinancial,
           {demand.financialApproved !== undefined && <span>Financeiro <b>{demand.financialApproved ? 'Aprovado' : 'Pendente'}</b></span>}
           {demand.rhApproved !== undefined && <span>Equipe de RH <b>{demand.rhApproved ? `${demand.assignedStaffCount ?? 0} pessoas alocadas` : 'Pendente'}</b></span>}
         </div>}
-        {page === 'commercial' && demand.status === 'ORCAMENTO' && <button className="primary-button review-trigger" onClick={onCommercialApprove}><Check size={15} /> Aprovar proposta e enviar ao Financeiro</button>}
-        {(canReviewFinance || canReviewHr) && <button className="secondary-button review-trigger" onClick={() => setShowAction(!showAction)}>{showAction ? 'Cancelar' : canReviewFinance ? 'Revisar financeiro' : 'Revisar alocação'}<ChevronDown size={15} /></button>}
-        {showAction && canReviewFinance && <form className="review-form" onSubmit={(event) => { event.preventDefault(); onFinancial({ paymentTerms: terms, costEstimate: Number(cost), invoicedValue: Number(invoiced), approved: true }); setShowAction(false); }}><label>Condição de pagamento<input value={terms} onChange={(event) => setTerms(event.target.value)} required placeholder="Ex.: 30/60/90 dias" /></label><label>Custo estimado (R$)<input type="number" min="0" step="0.01" value={cost} onChange={(event) => setCost(event.target.value)} required /></label><label>Valor faturado (R$)<input type="number" min="0" step="0.01" value={invoiced} onChange={(event) => setInvoiced(event.target.value)} required /></label><button className="primary-button" type="submit"><Check size={15} /> Aprovar análise</button></form>}
-        {showAction && canReviewHr && <form className="review-form" onSubmit={(event) => { event.preventDefault(); onHr({ requiredRoles: roles.split(',').map((role) => role.trim()).filter(Boolean), assignedStaffCount: Number(staff), approved: true }); setShowAction(false); }}><label>Perfis necessários<input value={roles} onChange={(event) => setRoles(event.target.value)} required placeholder="Ex.: Analista, Desenvolvedor" /></label><label>Pessoas alocadas<input type="number" min="0" step="1" value={staff} onChange={(event) => setStaff(event.target.value)} required /></label><button className="primary-button" type="submit"><Check size={15} /> Confirmar alocação</button></form>}
+        <DemandReview demand={demand} page={page} onComplete={onRefresh} />
+        <Communication key={demand.updatedAt} user={user} demandId={demand.id} />
       </div>}
     </article>
   );
@@ -669,8 +660,15 @@ function HistoryModal({ demand, history, onClose }: { demand: Demand; history: D
   return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section className="modal history-modal" role="dialog" aria-modal="true" aria-labelledby="history-title"><div className="modal-heading"><div><span className="eyebrow">{demand.code}</span><h2 id="history-title">Histórico da demanda</h2></div><button className="icon-button" aria-label="Fechar" onClick={onClose}><X size={19} /></button></div><div className="history-demand-title">{demand.title}<span>{demand.clientName}</span></div><div className="timeline">{history.map((entry) => <div className="timeline-item" key={entry.id}><span className="timeline-dot" /><div className="timeline-content"><div className="timeline-top"><strong>{entry.action}</strong><time>{date(entry.timestamp)}</time></div><p>{entry.details}</p><small>{entry.authorName} · {entry.department}</small></div></div>)}{!history.length && <p className="table-empty">Ainda não há registros de histórico.</p>}</div></section></div>;
 }
 
-function ProfilePage({ user }: { user: User }) {
-  return <section><div className="page-heading"><div><div className="eyebrow">CONTA</div><h1>Meu perfil</h1><p>Informações da sua conta e nível de acesso.</p></div></div><div className="profile-card"><span className="profile-large-avatar">{user.name.slice(0, 1).toUpperCase()}</span><div className="profile-card-heading"><h2>{user.name}</h2><span>{roleLabels[user.role]}</span></div><div className="profile-fields"><div><span>Endereço de e-mail</span><strong>{user.email}</strong></div><div><span>Área</span><strong>{user.department}</strong></div><div><span>Nível de acesso</span><strong>{roleLabels[user.role]}</strong></div><div><span>Conta</span><strong className="account-active"><i />Ativa</strong></div></div><div className="profile-security"><ShieldCheck size={18} /><span><strong>Conta protegida</strong><small>As permissões são aplicadas e validadas pelo servidor.</small></span></div></div></section>;
+function ProfilePage({ user, onAvatarChange }: { user: User; onAvatarChange: (url: string) => void }) {
+  return (
+    <section className="account-page">
+      <div className="page-heading">
+        <div><div className="eyebrow">SUA CONTA</div><h1>Meu perfil</h1><p>Sua identidade dentro do Fluxo.</p></div>
+      </div>
+      <ProfileCard user={user} roleLabel={roleLabels[user.role]} onAvatarChange={onAvatarChange} />
+    </section>
+  );
 }
 
 function RegistrationRequestsPage({ requests, onApprove, onReject }: {

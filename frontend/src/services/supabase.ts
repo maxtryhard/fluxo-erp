@@ -1,11 +1,17 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import type { DemandStatus, Role } from '../types';
+import type { DemandStatus, Role, SectorMessage } from '../types';
 
 type AccountStatus = 'PENDING' | 'ACTIVE' | 'REJECTED';
 
 interface Database {
   public: {
     Tables: {
+      sector_messages: {
+        Row: SectorMessage;
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       profiles: {
         Row: {
           id: string;
@@ -75,6 +81,14 @@ interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      send_sector_message: {
+        Args: { p_demand_id: string | null; p_scope: string; p_kind: string; p_body: string };
+        Returns: string;
+      };
+      review_demand_with_note: {
+        Args: { p_id: string; p_action: string; p_note: string; p_data: Record<string, string | number | boolean | string[]> };
+        Returns: undefined;
+      };
       get_visible_demands: {
         Args: Record<string, never>;
         Returns: {

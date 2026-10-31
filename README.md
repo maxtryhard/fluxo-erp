@@ -63,3 +63,21 @@ npm audit
 RLS é a barreira de autorização do banco; a chave publicável não concede acesso sem políticas. As migrations devem ser aplicadas no projeto Supabase antes de usar login e telas do ERP. Demandas e histórico são lidos por funções SQL que retornam somente os campos permitidos para cada perfil; o acesso direto às colunas financeiras e de RH é revogado para usuários autenticados. Comercial vê dados da demanda e orçamento; Financeiro vê também os dados financeiros; RH vê os dados de alocação; Gerência e Administração veem todos os campos. O histórico é filtrado por área, preservando para Financeiro e RH os eventos comerciais necessários ao fluxo. A conta administrativa inicial é promovida manualmente no SQL Editor porque não existe usuário administrador confiável antes desse bootstrap. O frontend não usa nem deve receber uma chave `service_role`.
 
 Os registros de auditoria são escritos por gatilhos SQL e não podem ser criados/alterados pelo cliente autenticado. Rate limiting e mitigação de DDoS em produção ainda dependem da infraestrutura de borda.
+
+## Fotos de perfil
+
+Para habilitar **Alterar foto**, execute também `supabase/migrations/20261031000000_profile_avatars.sql` no SQL Editor do Supabase, após as migrations anteriores. A migration cria o bucket privado `profile-avatars` e políticas que permitem a contas ativas ler, inserir e substituir apenas o próprio avatar. Não é necessário configurar chaves secretas no frontend.
+
+O perfil compacto abre pelo usuário no cabeçalho e fecha com Escape, botão de fechar ou clique fora. A página completa continua acessível na barra horizontal de navegação. O upload aceita JPG, PNG e WebP de até 5 MB, aplica recorte central e gera um JPEG de 384 × 384 px. A foto é salva na conta e reaparece ao entrar novamente. Sem a migration, o perfil abre normalmente e a tentativa de upload mostra uma mensagem de erro; nenhuma foto é marcada como salva.
+
+## Comunicação entre setores e pareceres
+
+Execute `supabase/migrations/20261031010000_sector_communication.sql` no SQL Editor do Supabase após as migrations anteriores para habilitar:
+
+- **Conversas** na navegação: comunicação compartilhada entre setores e canais restritos de Financeiro/RH.
+- **Dentro das demandas:** expanda os detalhes para registrar mensagens, análises e pendências/dúvidas vinculadas à demanda.
+- **Revisão:** Comercial, Financeiro e RH registram um parecer antes de encaminhar; o parecer e a transição são gravados na mesma transação. Pareceres financeiros e de RH respeitam a visibilidade da área.
+
+A conversa atualiza a cada 15 segundos quando a aba está visível e tem atualização manual e paginação de registros anteriores. Mensagens não podem ser editadas nem excluídas pelo cliente. O autor e setor são determinados no banco; contas pendentes não têm acesso. Há um intervalo mínimo de 2 segundos entre envios por usuário no banco. Isso limita rajadas de mensagens; a proteção de DDoS continua dependendo da infraestrutura.
+
+Sem a migration, conversas e novos encaminhamentos mostram uma mensagem de configuração pendente, sem simular sucesso. Aplique-a antes de usar o novo fluxo em produção. Os testes SQL em `supabase/tests/sector_communication.sql` verificam leitura por perfil, bloqueio de envio não autorizado, imutabilidade e encaminhamento com parecer. Execute-os somente em um Supabase de teste com as migrations aplicadas; os dados de teste são revertidos por rollback.
