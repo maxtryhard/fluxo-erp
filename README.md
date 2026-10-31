@@ -81,3 +81,15 @@ Execute `supabase/migrations/20261031010000_sector_communication.sql` no SQL Edi
 A conversa atualiza a cada 15 segundos quando a aba está visível e tem atualização manual e paginação de registros anteriores. Mensagens não podem ser editadas nem excluídas pelo cliente. O autor e setor são determinados no banco; contas pendentes não têm acesso. Há um intervalo mínimo de 2 segundos entre envios por usuário no banco. Isso limita rajadas de mensagens; a proteção de DDoS continua dependendo da infraestrutura.
 
 Sem a migration, conversas e novos encaminhamentos mostram uma mensagem de configuração pendente, sem simular sucesso. Aplique-a antes de usar o novo fluxo em produção. Os testes SQL em `supabase/tests/sector_communication.sql` verificam leitura por perfil, bloqueio de envio não autorizado, imutabilidade e encaminhamento com parecer. Execute-os somente em um Supabase de teste com as migrations aplicadas; os dados de teste são revertidos por rollback.
+
+## Pessoas & RH: equipe e alocações
+
+Para habilitar o módulo ampliado, execute **somente a nova migration** `supabase/migrations/20261031020000_people_allocation.sql` no SQL Editor, após as migrations já aplicadas. Não execute novamente as migrations anteriores. Este desenvolvimento fica em `feature/people-allocation` e deve seguir PR para `develop` e depois PR para `main`.
+
+- **Equipe:** cadastrar e editar colaboradores sem criar contas de acesso; registrar função, competências, disponibilidade (100%, 50% ou 0%) e situação ativa/inativa.
+- **Alocações:** selecionar pessoa e demanda recebida do Financeiro, informar função, período e dedicação. A soma de compromissos simultâneos não pode ultrapassar a disponibilidade. Cancelamentos exigem motivo e preservam o histórico.
+- **Demandas recebidas:** os cartões existentes, conversas e histórico continuam disponíveis. Monte a equipe e registre o parecer para enviar à execução. A contagem confirmada é derivada das pessoas alocadas; cancelamentos posteriores constam na aba Alocações e no histórico.
+
+RH e Administração podem alterar; Gerência pode consultar. Comercial e Financeiro não recebem acesso ao cadastro ou às alocações. Os formulários e funções existentes de Comercial e Financeiro são preservados. Sem a migration, a nova tela de RH informa configuração pendente; as outras áreas continuam funcionando.
+
+`supabase/tests/people_allocation.sql` contém testes de leitura por perfil, bloqueio de escrita, capacidade, reservas simultâneas/sequenciais, cancelamento e confirmação de equipe. Execute somente em banco Supabase de teste após aplicar as migrations; todos os dados de teste são revertidos por rollback. Os testes SQL não foram executados no ambiente local sem PostgreSQL/Supabase CLI.
