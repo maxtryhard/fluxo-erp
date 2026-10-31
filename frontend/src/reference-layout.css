@@ -340,3 +340,53 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
   .demand-review-form { padding: 14px; }
   .horizontal-shell .breadcrumb { max-width: calc(100% - 155px); overflow: hidden; }
 }
+
+/* People operations: independent roster, planned assignments and existing demand flow. */
+.people-page { min-width: 0; }
+.people-summary { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 16px; margin-bottom: 24px; }
+.people-summary > div { display: grid; gap: 18px; padding: 20px; border: 1px solid var(--outline); border-radius: var(--radius-card); background: var(--panel-surface); }
+.people-summary span { color: var(--on-surface-variant); font-size: 12px; line-height: 1.5; }
+.people-summary strong { color: var(--on-surface); font-size: 30px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.people-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.people-tabs button { min-height: 44px; padding: 10px 18px; border: 1px solid var(--outline); border-radius: 13px; background: var(--panel-surface); color: var(--on-surface-variant); font-size: 13px; }
+.people-tabs button[aria-pressed="true"] { background: var(--primary); color: #fff; }
+.people-toolbar, .people-section-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.people-toolbar { margin-bottom: 20px; }
+.people-toolbar .search-box { width: min(420px,100%); }
+.people-help { color: var(--on-surface-variant); font-size: 13px; line-height: 1.6; }
+.people-editor, .people-person, .people-allocation, .people-team-confirmation { padding: 24px; border: 1px solid var(--outline); border-radius: 20px; background: var(--panel-surface); color: var(--on-surface); }
+.people-editor { margin-bottom: 24px; }
+.people-section-heading h2, .people-section-heading h3 { margin: 0; color: var(--on-surface); font-size: 17px; font-weight: 500; }
+.people-section-heading p { margin: 6px 0 0; color: var(--on-surface-variant); font-size: 13px; line-height: 1.5; }
+.people-form { margin-top: 16px; }
+.people-form fieldset { min-width: 0; display: grid; gap: 16px; margin: 0; padding: 0; border: 0; }
+.people-form fieldset > button { justify-self: start; }
+.people-form-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.people-form select { min-width: 0; width: 100%; min-height: 44px; border: 1px solid var(--outline); border-radius: 10px; padding: 9px 12px; color: var(--on-surface); background: var(--panel-surface); font: inherit; }
+.people-form .field-label input, .people-form .field-label textarea { font-size: 14px; min-height: 44px; }
+.people-form textarea { resize: vertical; line-height: 1.6; }
+.people-form .alert { margin: 12px 0 0; }
+.people-success { display: block; margin-top: 10px; color: #28745e; font-size: 13px; }
+.people-success:empty { display: none; }
+.people-cards { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(280px,100%),1fr)); gap: 16px; }
+.people-person header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.people-person header > div { min-width: 0; }
+.people-person h2 { font-size: 17px; font-weight: 500; margin: 0; overflow-wrap: anywhere; }
+.people-person header p { margin: 6px 0 0; color: var(--on-surface-variant); font-size: 13px; overflow-wrap: anywhere; }
+.people-initial { display: grid; flex: none; width: 44px; height: 44px; place-items: center; border-radius: 14px; background: #efedf8; color: #57467e; font-size: 20px; }
+.people-skills { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0; }
+.people-skills span { padding: 5px 8px; border: 1px solid var(--outline); border-radius: 7px; color: var(--on-surface-variant); font-size: 11px; overflow-wrap: anywhere; }
+.people-allocation-list, .people-demand-list { display: grid; gap: 16px; }
+.people-allocation-meta { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-top: 18px; color: var(--on-surface-variant); font-size: 13px; }
+.people-allocation-meta > span { display: inline-flex; align-items: center; gap: 6px; }
+.people-team-confirmation { margin-top: 10px; }
+.people-team-list { display: grid; gap: 12px; margin: 18px 0; padding: 0; list-style: none; }
+.people-team-list li { display: grid; gap: 6px; padding-bottom: 12px; border-bottom: 1px solid var(--outline); font-size: 13px; }
+.people-team-list span { color: var(--on-surface-variant); line-height: 1.6; }
+@media(max-width:760px) { .people-summary { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; } }
+@media(max-width:520px) {
+  .people-form-grid { grid-template-columns: 1fr; }
+  .people-editor, .people-person, .people-allocation, .people-team-confirmation { padding: 16px; }
+  .people-summary > div { padding: 16px; }
+  .people-toolbar > button { width: 100%; }
+}

@@ -23,6 +23,7 @@ import { api } from './services/api';
 import { ProfileCard, ProfileDialog, UserAvatar } from './components/ProfileCard';
 import { Communication } from './components/Communication';
 import { ThemeToggle } from './components/ThemeToggle';
+import { PeoplePage } from './components/PeoplePage';
 import { DemandReview } from './components/DemandReview';
 import type { CreateDemandInput, Demand, DemandHistory, DemandStatus, Overview, RegistrationRequest, Role, User } from './types';
 
@@ -83,7 +84,7 @@ const navGroups: { label: string; items: { page: Page; label: string; icon: type
       { page: 'chat', label: 'Conversas', icon: MessageSquare, keywords: ['chat', 'mensagens', 'setores'] },
       { page: 'commercial', label: 'Comercial', icon: BriefcaseBusiness, roles: ['ADMIN', 'COMERCIAL'] },
       { page: 'finance', label: 'Financeiro', icon: CircleDollarSign, roles: ['ADMIN', 'FINANCEIRO'] },
-      { page: 'people', label: 'Pessoas & RH', icon: Users, roles: ['ADMIN', 'RH'] },
+      { page: 'people', label: 'Pessoas & RH', icon: Users, roles: ['ADMIN', 'RH', 'GERENCIA'] },
     ],
   },
   {
@@ -318,6 +319,8 @@ function App() {
             <RegistrationRequestsPage requests={registrationRequests} onApprove={(id, role) => void runAction(() => api.approveRegistration(id, role))} onReject={(id) => void runAction(() => api.rejectRegistration(id))} />
           ) : page === 'profile' ? (
             <ProfilePage user={user} onAvatarChange={updateAvatar} />
+          ) : page === 'people' ? (
+            <PeoplePage user={user} demands={demands} onRefresh={refresh} renderDemand={(demand) => <DemandCard demand={demand} user={user} page="people" showReview={false} onHistory={() => void showHistory(demand)} onRefresh={refresh} />} />
           ) : page === 'overview' ? (
             <OverviewPage user={user} demands={demands} activeCount={requestCount} totalBudget={totalBudget} totalInvoiced={totalInvoiced} onOpenDemands={() => setPage('demands')} onHistory={showHistory} />
           ) : (
@@ -607,8 +610,8 @@ function MetricCard({ icon: Icon, label, value, note, tone, featured = false }: 
   return <div className={`metric-card ${featured ? 'metric-card-featured' : ''}`}><div className={`metric-icon metric-${tone}`}><Icon size={18} /></div><span className="metric-label">{label}</span><strong className="metric-value">{value}</strong><span className="metric-note">{note}</span></div>;
 }
 
-function DemandCard({ demand, user, page, onHistory, onRefresh }: {
-  demand: Demand; user: User; page: Page; onHistory: () => void; onRefresh: () => Promise<void>;
+function DemandCard({ demand, user, page, onHistory, onRefresh, showReview = true }: {
+  demand: Demand; user: User; page: Page; onHistory: () => void; onRefresh: () => Promise<void>; showReview?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   return (
@@ -626,7 +629,7 @@ function DemandCard({ demand, user, page, onHistory, onRefresh }: {
           {demand.financialApproved !== undefined && <span>Financeiro <b>{demand.financialApproved ? 'Aprovado' : 'Pendente'}</b></span>}
           {demand.rhApproved !== undefined && <span>Equipe de RH <b>{demand.rhApproved ? `${demand.assignedStaffCount ?? 0} pessoas alocadas` : 'Pendente'}</b></span>}
         </div>}
-        <DemandReview demand={demand} page={page} onComplete={onRefresh} />
+        {showReview && <DemandReview demand={demand} page={page} onComplete={onRefresh} />}
         <Communication key={demand.updatedAt} user={user} demandId={demand.id} />
       </div>}
     </article>

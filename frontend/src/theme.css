@@ -72,3 +72,6 @@
   .theme-toggle { transition: none; }
   .theme-toggle:hover { transform: none; }
 }
+[data-theme="dark"] .people-tabs button[aria-pressed="true"] { background: #5653b8; color: #fff; }
+[data-theme="dark"] .people-initial { background: #403354; color: #dacafa; }
+[data-theme="dark"] .people-success { color: #a3e2c4; }

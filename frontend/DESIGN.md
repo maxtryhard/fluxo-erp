@@ -143,3 +143,15 @@ The full profile page fills the available content width without a separate card-
 The header and login expose an accessible sun/moon theme toggle. On first use, follow the system color scheme. An explicit choice persists in `localStorage` under `fluxo.theme`; synchronize changes between tabs. If storage is unavailable, switching still works for the current page. Apply the initial preference before rendering the app.
 
 `src/theme.css` defines dark surfaces, readable text, form controls, status badges, conversation panels, profile cards, dialogs, and chart tooltip/axis/grid colors. The existing profile banner and illustrated login retain their authored visual identity. Theme colors must not replace status labels, role checks, or focus indicators. No account or database migration is required.
+
+## People and allocation workspace
+
+Pessoas & RH has three sections: Equipe, Alocações, and Demandas recebidas. RH and Administração can manage the roster and allocations; Gerência has read-only access. Comercial and Financeiro cannot read these tables. Employees are operational records, independent of authentication accounts, and contain only name, job title, skills, availability capacity, and active state.
+
+Capacity can be 100%, 50%, or 0%. The displayed free capacity subtracts active allocations on the current business date in America/Cuiaba. A missing database configuration shows a setup error and unknown staffing totals rather than fabricated zero counts. Forms work independently of receiving demands.
+
+Allocations bind a named person to a demand awaiting RH, with function, inclusive start/end dates, and dedication percentage. The database serializes changes per employee and checks peak cumulative load throughout the proposed interval; sequential work is not treated as simultaneous. Disallow overlapping duplicate bookings on the same demand, unavailable employees, and capacity reductions below reserved load. Preserve completed/cancelled bookings, and require a reason to cancel an open booking. Allocation/cancellation events enter the existing RH-scoped demand history.
+
+Demandas recebidas reuses the existing demand card, conversation, and audit-history controls. RH confirms named allocations with a written opinion; a dedicated RPC derives the distinct person count/functions and calls the existing transactional handoff. The previous count is a snapshot at confirmation; later cancellations are tracked in allocations and history. The Commercial and Financial review forms and transition functions are not changed.
+
+The new feature requires only `20261031020000_people_allocation.sql` after the prior migrations. No production release or database migration is performed as part of local interface development. Staffing-specific styles inherit theme tokens and adapt forms, summary cards, and records to narrow screens.
