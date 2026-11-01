@@ -4,6 +4,7 @@ import {
   ArrowDownToLine,
   ArrowRight,
   BriefcaseBusiness,
+  BookOpen,
   Check,
   ChevronDown,
   CircleDollarSign,
@@ -23,12 +24,18 @@ import { api } from './services/api';
 import { ProfileCard, ProfileDialog, UserAvatar } from './components/ProfileCard';
 import { Communication } from './components/Communication';
 import { ThemeToggle } from './components/ThemeToggle';
-import { PeoplePage } from './components/PeoplePage';
-import { FinancePage } from './components/FinancePage';
+import { PublicEntry } from './components/PublicEntry';
+import { NavigationDock } from './components/NavigationDock';
+import { GuideInvitation, SystemGuide } from './components/SystemGuide';
+import { getTourSteps, type TourStep } from './content/systemTour';
+import type { GuideDestination } from './content/systemGuide';
 import { DemandReview } from './components/DemandReview';
 import type { CreateDemandInput, Demand, DemandHistory, DemandStatus, Overview, RegistrationRequest, Role, User } from './types';
 
 const DataVisualization = lazy(() => import('./components/DataVisualization'));
+const GuidedTour = lazy(() => import('./components/GuidedTour'));
+const PeoplePage = lazy(() => import('./components/PeoplePage').then((module) => ({ default: module.PeoplePage })));
+const FinancePage = lazy(() => import('./components/FinancePage').then((module) => ({ default: module.FinancePage })));
 
 type Page = 'overview' | 'demands' | 'commercial' | 'finance' | 'people' | 'registrations' | 'profile' | 'chat';
 
@@ -112,6 +119,8 @@ function App() {
   const [history, setHistory] = useState<DemandHistory[]>([]);
   const [navSearchOpen, setNavSearchOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [tourSteps, setTourSteps] = useState<TourStep[] | null>(null);
   const updateAvatar = (url: string) => setUser((current) => current ? { ...current, avatarUrl: url } : current);
   const [navSearch, setNavSearch] = useState('');
 
@@ -197,6 +206,8 @@ function App() {
 
   const handleLogout = async () => {
     await api.logout();
+    setGuideOpen(false);
+    setTourSteps(null);
     setUser(null);
     setDemands([]);
     setOverview(null);
@@ -228,7 +239,7 @@ function App() {
   }
 
   if (!user) {
-    return <LoginScreen onLogin={handleLogin} onRegister={handleRegister} error={error} />;
+    return <PublicEntry onLogin={handleLogin} onRegister={handleRegister} error={error} />;
   }
 
   const authorizedNavGroups = navGroups
@@ -256,9 +267,16 @@ function App() {
   const totalBudget = overview?.totalBudget ?? demands.reduce((sum, item) => sum + (item.budgetTotal ?? 0), 0);
   const totalInvoiced = overview?.totalInvoiced ?? demands.reduce((sum, item) => sum + (item.invoicedValue ?? 0), 0);
 
+  const startTour = (onlyPage?: GuideDestination) => {
+    const allowed = authorizedNavGroups.flatMap((group) => group.items.map((item) => item.page));
+    if (onlyPage && !allowed.includes(onlyPage)) return;
+    setGuideOpen(false); setProfileOpen(false); setNavSearch(''); setNavSearchOpen(false);
+    setTourSteps(getTourSteps(allowed, onlyPage));
+  };
+
   return (
     <div className="app-shell horizontal-shell">
-      <main className="main-area">
+      <main className="main-area" data-tour-page={page}>
         <header className="topbar">
           <a
             className="brand topbar-brand"
@@ -271,6 +289,7 @@ function App() {
           </a>
           <div className="breadcrumb"><span>Workspace</span><span className="crumb-separator">/</span><strong>{pageTitle}</strong></div>
           <div className="topbar-right">
+            <button type="button" className="guide-trigger" data-tour="guide-trigger" aria-label="Como usar o Fluxo" aria-haspopup="dialog" onClick={() => setGuideOpen(true)}><BookOpen size={18} aria-hidden="true" /><span>Como usar</span></button>
             <ThemeToggle />
             <span className="today-label">{date(new Date().toISOString())}</span>
             <button
@@ -289,10 +308,10 @@ function App() {
           </div>
         </header>
         <div className="navigation-bar">
-          <nav className="horizontal-nav" aria-label="Navegação principal">
+          <NavigationDock activePage={page}>
             {visibleNavGroups.flatMap((group) => group.items).map(({ page: itemPage, label, icon: Icon }) => (
               <button key={itemPage} type="button" className={`dock-item ${page === itemPage ? 'dock-item-active' : ''}`}
-                aria-label={label} aria-current={page === itemPage ? 'page' : undefined} title={label}
+                aria-label={label} aria-current={page === itemPage ? 'page' : undefined}
                 onClick={() => { setPage(itemPage); setNavSearch(''); setNavSearchOpen(false); }}>
                 <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
                 <span className="dock-label">{label}</span>
@@ -301,10 +320,10 @@ function App() {
             ))}
             {!visibleNavGroups.length && <span className="dock-empty" role="status">Nenhuma página encontrada.</span>}
             <span className="dock-divider" aria-hidden="true" />
-            <button type="button" className={`dock-item dock-utility ${navSearchOpen ? 'dock-search-active' : ''}`} aria-label="Buscar páginas" title="Buscar páginas"
+            <button type="button" className={`dock-item dock-utility ${navSearchOpen ? 'dock-search-active' : ''}`} aria-label="Buscar páginas"
               aria-expanded={navSearchOpen} aria-controls="navigation-search" onClick={() => { setNavSearchOpen((open) => !open); setNavSearch(''); }}><Search size={18} /></button>
-            <button type="button" className="dock-item dock-utility dock-logout" aria-label="Sair da conta" title="Sair da conta" onClick={() => void handleLogout()}><LogOut size={18} /></button>
-          </nav>
+            <button type="button" className="dock-item dock-utility dock-logout" aria-label="Sair da conta" onClick={() => void handleLogout()}><LogOut size={18} /></button>
+          </NavigationDock>
           {navSearchOpen && <label className="dock-search" id="navigation-search"><Search size={16} aria-hidden="true" />
             <input type="search" aria-label="Buscar páginas do menu" placeholder="Buscar páginas..." value={navSearch} autoFocus onChange={(event) => setNavSearch(event.target.value)}
               onKeyDown={(event) => { if (event.key === 'Escape') { setNavSearchOpen(false); setNavSearch(''); } }} />
@@ -313,6 +332,7 @@ function App() {
         </div>
         <div className="page-content">
           <div className="page-transition" key={page}>
+          {page === 'overview' && <GuideInvitation onOpen={() => setGuideOpen(true)} />}
           {error && <div className="alert" role="alert"><span>{error}</span><button aria-label="Fechar aviso" onClick={() => setError('')}><X size={16} /></button></div>}
           {page === 'chat' ? (
             <section><div className="page-heading"><div><div className="eyebrow">COLABORAÇÃO</div><h1>Conversas</h1><p>Contexto compartilhado para uma operação conectada.</p></div></div><Communication user={user} /></section>
@@ -321,21 +341,22 @@ function App() {
           ) : page === 'profile' ? (
             <ProfilePage user={user} onAvatarChange={updateAvatar} />
           ) : page === 'finance' ? (
-            <FinancePage user={user} demands={demands} onRefresh={refresh} renderDemand={(demand) => <DemandCard demand={demand} user={user} page="finance" showReview={user.role !== 'GERENCIA'} onHistory={() => void showHistory(demand)} onRefresh={refresh} />} />
+            <Suspense fallback={<p role="status">Carregando Financeiro...</p>}><FinancePage user={user} demands={demands} onRefresh={refresh} renderDemand={(demand) => <DemandCard demand={demand} user={user} page="finance" showReview={user.role !== 'GERENCIA'} onHistory={() => void showHistory(demand)} onRefresh={refresh} />} /></Suspense>
           ) : page === 'people' ? (
-            <PeoplePage user={user} demands={demands} onRefresh={refresh} renderDemand={(demand) => <DemandCard demand={demand} user={user} page="people" showReview={false} onHistory={() => void showHistory(demand)} onRefresh={refresh} />} />
+            <Suspense fallback={<p role="status">Carregando Pessoas e RH...</p>}><PeoplePage user={user} demands={demands} onRefresh={refresh} renderDemand={(demand) => <DemandCard demand={demand} user={user} page="people" showReview={false} onHistory={() => void showHistory(demand)} onRefresh={refresh} />} /></Suspense>
           ) : page === 'overview' ? (
             <OverviewPage user={user} demands={demands} activeCount={requestCount} totalBudget={totalBudget} totalInvoiced={totalInvoiced} onOpenDemands={() => setPage('demands')} onHistory={showHistory} />
           ) : (
             <section>
               <div className="page-heading">
                 <div><div className="eyebrow">OPERAÇÃO</div><h1>{pageTitle}</h1><p>{pageDescription(page)}</p></div>
-                {page === 'commercial' && user.role !== 'FINANCEIRO' && user.role !== 'RH' && <button className="primary-button" onClick={() => setShowCreate(true)}><Plus size={17} /> Nova demanda</button>}
+                {page === 'commercial' && user.role !== 'FINANCEIRO' && user.role !== 'RH' && <button className="primary-button" data-tour="new-demand" onClick={() => setShowCreate(true)}><Plus size={17} /> Nova demanda</button>}
               </div>
-              <div className="filter-row">
+              <div className="filter-row" data-tour="demand-search">
                 <label className="search-box"><Search size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar demanda, cliente ou código..." /></label>
                 <span className="results-count">{filteredDemands.length} registros</span>
               </div>
+              <div data-tour="demand-results">
               {filteredDemands.length ? (
                 <div className="demand-list">
                   {filteredDemands.map((item) => (
@@ -343,11 +364,21 @@ function App() {
                   ))}
                 </div>
               ) : <EmptyState page={page} onCreate={() => setShowCreate(true)} />}
+              </div>
             </section>
           )}
           </div>
         </div>
       </main>
+      {guideOpen && <SystemGuide onStartTour={startTour} allowedPages={authorizedNavGroups.flatMap((group) => group.items.map((item) => item.page))} onClose={() => setGuideOpen(false)} onNavigate={(destination) => {
+        if (authorizedNavGroups.some((group) => group.items.some((item) => item.page === destination))) { setPage(destination); setGuideOpen(false); setNavSearch(''); setNavSearchOpen(false); }
+      }} />}
+      {tourSteps && <Suspense fallback={<div className="tour-loading" role="status">Preparando guia...</div>}><GuidedTour steps={tourSteps} onClose={() => {
+        setTourSteps(null);
+        requestAnimationFrame(() => document.querySelector<HTMLButtonElement>('[data-tour="guide-trigger"]')?.focus({ preventScroll: true }));
+      }} onNavigate={(destination) => {
+        if (authorizedNavGroups.some((group) => group.items.some((item) => item.page === destination))) setPage(destination);
+      }} /></Suspense>}
       {profileOpen && <ProfileDialog user={user} roleLabel={roleLabels[user.role]} onAvatarChange={updateAvatar} onClose={() => setProfileOpen(false)} />}
       {showCreate && <CreateDemandModal onClose={() => setShowCreate(false)} onSubmit={(data) => runAction(async () => { await api.createDemand(data); setShowCreate(false); setPage('demands'); })} />}
       {historyDemand && <HistoryModal demand={historyDemand} history={history} onClose={() => setHistoryDemand(null)} />}
@@ -366,97 +397,6 @@ function pageDescription(page: Page): string {
   }
 }
 
-function LoginScreen({ onLogin, onRegister, error }: {
-  onLogin: (email: string, password: string) => Promise<void>;
-  onRegister: (name: string, email: string, password: string) => Promise<boolean>;
-  error: string;
-}) {
-  const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [formError, setFormError] = useState('');
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    setFormError('');
-    setSubmitting(true);
-    try {
-      if (mode === 'register') {
-        if (password !== confirmPassword) {
-          setFormError('As senhas informadas não coincidem.');
-          return;
-        }
-        setSubmitted(await onRegister(name, email, password));
-      } else {
-        await onLogin(email, password);
-      }
-    } catch {
-      return;
-    } finally {
-      setSubmitting(false);
-    }
-  };
-  return (
-    <div className="login-layout">
-      <div className="login-theme-control"><ThemeToggle /></div>
-      <div className="login-landscape" aria-hidden="true" />
-      <div className="login-scene-caption" aria-hidden="true"><span>CONEXÕES QUE MOVEM</span><strong>Um fluxo.<br />Novas possibilidades.</strong><small>Comercial · Financeiro · Pessoas</small></div>
-      <section className="login-panel">
-        <header className="login-header">
-          <a className="brand login-brand" href="#" onClick={(event) => event.preventDefault()}>
-            <span className="brand-icon"><Activity size={20} strokeWidth={2.2} /></span>
-            <span>fluxo<span className="brand-period">.</span><small>GESTÃO INTEGRADA</small></span>
-          </a>
-          <div className="auth-switch">
-            <span>{submitted ? 'Cadastro enviado' : mode === 'login' ? 'Não tem uma conta?' : 'Já tem uma conta?'}</span>
-            <button
-              type="button"
-              onClick={() => {
-                if (submitted) setSubmitted(false);
-                setMode(mode === 'login' ? 'register' : 'login');
-                setFormError('');
-              }}
-            >
-              {submitted ? 'Entrar' : mode === 'login' ? 'Cadastre-se' : 'Entrar'}
-            </button>
-          </div>
-        </header>
-        <div className="login-content">
-          {submitted ? (
-            <div className="login-form registration-success" role="status">
-              <span className="success-mark"><Check size={23} /></span>
-              <span className="login-overline">SOLICITAÇÃO ENVIADA</span>
-              <h2>Cadastro em análise</h2>
-              <p>Um administrador precisa aprovar seu acesso e definir sua área antes de você entrar no sistema.</p>
-              <div className="pending-note"><ShieldCheck size={17} /><span>Você poderá entrar com este e-mail e senha após a aprovação.</span></div>
-            </div>
-          ) : (
-            <form className="login-form" onSubmit={(event) => void submit(event)}>
-              <span className="login-emblem"><UserRound size={23} strokeWidth={1.7} /></span>
-              <span className="login-overline">{mode === 'login' ? 'BEM-VINDO(A) DE VOLTA' : 'ACESSO À PLATAFORMA'}</span>
-              <h1>{mode === 'login' ? 'Acesse sua conta' : 'Solicite seu cadastro'}</h1>
-              <p>{mode === 'login' ? 'Entre para acompanhar o trabalho da sua equipe.' : 'Um administrador aprovará seu acesso e atribuirá sua área.'}</p>
-              {(error || formError) && <div className="alert login-alert" role="alert">{formError || error}</div>}
-              {mode === 'register' && <label className="field-label">Nome completo<input type="text" autoComplete="name" minLength={2} maxLength={100} required value={name} onChange={(event) => setName(event.target.value)} placeholder="Seu nome" /></label>}
-              <label className="field-label">E-mail corporativo<input type="email" autoComplete="username" maxLength={254} required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="voce@empresa.com" /></label>
-              <label className="field-label">Senha<input type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength={mode === 'login' ? 6 : 12} maxLength={128} required value={password} onChange={(event) => setPassword(event.target.value)} placeholder={mode === 'register' ? 'Mínimo de 12 caracteres' : 'Digite sua senha'} /></label>
-              {mode === 'register' && <label className="field-label">Confirme a senha<input type="password" autoComplete="new-password" minLength={12} maxLength={128} required value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="Digite a senha novamente" /></label>}
-              <button className="primary-button login-submit" disabled={submitting}>{submitting ? 'Aguarde...' : mode === 'login' ? 'Entrar na plataforma' : 'Enviar solicitação'}<ArrowRight size={17} /></button>
-            </form>
-          )}
-        </div>
-        <footer className="login-footer">
-          <span>Fluxo · Gestão integrada</span>
-          <span><ShieldCheck size={15} /> Conexão protegida</span>
-        </footer>
-      </section>
-
-    </div>
-  );
-}
 
 function OverviewPage({ user, demands, activeCount, totalBudget, totalInvoiced, onOpenDemands, onHistory }: {
   user: User; demands: Demand[]; activeCount: number; totalBudget: number; totalInvoiced: number;
@@ -491,7 +431,7 @@ function OverviewPage({ user, demands, activeCount, totalBudget, totalInvoiced, 
         <button className="primary-button" onClick={onOpenDemands}><FileText size={16} /> Abrir demandas <ArrowRight size={15} /></button>
       </div>
 
-      <div className="analytics-summary-grid" aria-label="Indicadores da operação">
+      <div className="analytics-summary-grid" data-tour="overview-metrics" aria-label="Indicadores da operação">
         <MetricCard icon={ClipboardList} label="Demandas cadastradas" value={String(demands.length)} note="No fluxo integrado" tone="orange" featured />
         <MetricCard
           icon={Activity}

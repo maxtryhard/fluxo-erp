@@ -17,7 +17,7 @@ export function Communication({ user, demandId = null }: { user: User; demandId?
   return (
     <section className="communication" aria-label={demandId ? 'Conversa da demanda' : 'Conversas entre setores'}>
       <div className="communication-heading"><MessageSquare size={20} aria-hidden="true" /><div><h2>{demandId ? 'Contexto e conversa da demanda' : 'Conversas entre setores'}</h2><p>{demandId ? 'Registre o que foi analisado, o que falta e o próximo passo.' : 'Alinhe o trabalho de Comercial, Financeiro e RH.'}</p></div></div>
-      <div className="conversation-scopes" role="group" aria-label="Visibilidade da conversa">
+      <div className="conversation-scopes" data-tour="conversation-scopes" role="group" aria-label="Visibilidade da conversa">
         {available.map((item) => <button key={item.id} type="button" aria-pressed={scope === item.id} onClick={() => setScope(item.id)}>{item.label}</button>)}
       </div>
       <p className="conversation-visibility"><ShieldCheck size={16} aria-hidden="true" />{scopes.find((item) => item.id === scope)?.description}</p>
