@@ -1,6 +1,12 @@
 :root {
   color-scheme: light;
   --panel-surface: #fff;
+  --panel-muted: #f7f7f5;
+  --link-color: #425fae;
+  --link-hover: #253d7d;
+  --placeholder-color: #686d78;
+  --soft-accent-surface: #edf0fa;
+  --soft-accent-ink: #425294;
   --chart-axis: #656761;
   --chart-grid: #eeece8;
   --chart-cursor: #f0efe9;
@@ -17,6 +23,12 @@
   --on-surface-variant: #b7b9c5;
   --outline: #3a3e49;
   --panel-surface: #22252d;
+  --panel-muted: #1b1e25;
+  --link-color: #b6c1ff;
+  --link-hover: #dce1ff;
+  --placeholder-color: #aeb4c4;
+  --soft-accent-surface: #30374f;
+  --soft-accent-ink: #cbd4ff;
   --error: #ffaaa9;
   --focus-ring: #a4afff;
   --chart-axis: #babdcb;
@@ -27,7 +39,7 @@
 /* Explicit surface and text pairs keep charts, forms, and feedback readable. */
 [data-theme="dark"] :is(.horizontal-nav, .topbar-profile, .analytics-panel, .communication, .profile-card, .profile-dialog, .modal, .demand-card, .registration-card, .empty-state, .search-box, .dock-search, .secondary-button) { background: var(--panel-surface); color: var(--on-surface); border-color: var(--outline); }
 [data-theme="dark"] :is(.dock-item, .dock-search input, .dock-search button, .topbar-brand, .topbar-profile-meta strong, .breadcrumb strong, .page-heading h1, .analytics-panel-heading h2, .metric-value, .stage-donut-center strong, .stage-mix-row strong, .stage-count-row strong, .demand-table-trigger strong, .demand-info h3, .flow-step strong, .registration-person strong, .profile-card-heading h2, .profile-fields strong, .modal-heading h2, .empty-state h3, .analytics-empty strong, .communication-heading h2, .conversation-message header strong, .conversation-message p, .history-demand-title, .timeline-top strong) { color: var(--on-surface); }
-[data-theme="dark"] :is(.breadcrumb, .eyebrow, .today-label, .topbar-profile-meta small, .topbar-profile > svg, .page-heading p, .metric-label, .metric-note, .analytics-kicker, .analytics-panel-heading p, .stage-count-label, .stage-mix-label, .stage-donut-center small, .demand-table-trigger small, .recent-empty, .stage-mix-empty, .analytics-empty, .analytics-empty > span, .empty-state p, .field-label, .review-form label, .registration-role, .profile-fields > div > span, .profile-photo-hint, .communication-heading p, .conversation-toolbar, .conversation-message header span, .conversation-message time, .conversation-form-footer, .conversation-empty, .demand-review-form > p, .modal-intro, .demand-info p, .detail-description p, .detail-description > strong, .detail-facts span, .detail-facts b, .timeline-content p, .timeline-content small, .timeline-top time, .results-count) { color: var(--on-surface-variant); }
+[data-theme="dark"] :is(.breadcrumb, .eyebrow, .today-label, .topbar-profile-meta small, .topbar-profile > svg, .page-heading p, .metric-label, .metric-note, .analytics-kicker, .analytics-panel-heading p, .stage-count-label, .stage-mix-label, .stage-donut-center small, .demand-table-trigger small, .recent-empty, .stage-mix-empty, .analytics-empty, .analytics-empty > span, .empty-state p, .field-label, .review-form label, .registration-role, .profile-fields > div > span, .profile-photo-hint, .communication-heading p, .conversation-toolbar, .conversation-message header span, .conversation-message time, .conversation-form-footer, .conversation-empty, .demand-review-form > p, .modal-intro, .demand-info p, .timeline-content p, .timeline-content small, .timeline-top time, .results-count) { color: var(--on-surface-variant); }
 [data-theme="dark"] :is(.dock-item:hover, .dock-search-active, .dock-count, .topbar-profile .topbar-avatar, .finance-icon, .profile-security, .conversation-visibility, .conversation-scopes button, .conversation-kind, .profile-card-heading > span, .history-demand-title, .demand-review-form) { background: #30343e; color: #d5d8e3; border-color: var(--outline); }
 [data-theme="dark"] :is(.dock-item-active, .dock-item-active:hover, .conversation-scopes button[aria-pressed="true"]) { color: #fff; background: #5653b8; }
 [data-theme="dark"] :is(.dock-item-active .dock-count, .primary-button) { color: #17191e; background: #c5caff; }
@@ -57,12 +69,9 @@
 [data-theme="dark"] .badge-amber { color: #f5d6a2; background: #4c3c24; }
 [data-theme="dark"] .badge-purple { color: #dacafa; background: #403354; }
 [data-theme="dark"] .badge-red { color: #ffc1c1; background: #532f38; }
-[data-theme="dark"] .text-button { color: #b6c1ff; }
+.text-button { color: var(--link-color); }
+.text-button:hover { color: var(--link-hover); }
 [data-theme="dark"] .loading-screen { background: var(--surface); color: var(--on-surface-variant); }
-/* The illustrated login keeps its authored dark form in both workspace themes. */
-[data-theme="dark"] .login-submit { background: #faf9f4; color: #24271f; }
-[data-theme="dark"] .login-submit:hover { background: #e7ddca; }
-[data-theme="dark"] .login-form .field-label { color: #e4e7de; }
 @media (max-width: 600px) {
   .horizontal-shell .topbar-right { gap: 8px; }
   .theme-toggle { width: 36px; height: 36px; border-radius: 11px; }
@@ -71,4 +80,39 @@
 @media (prefers-reduced-motion: reduce) {
   .theme-toggle { transition: none; }
   .theme-toggle:hover { transform: none; }
+}
+[data-theme="dark"] .people-tabs button[aria-pressed="true"] { background: #5653b8; color: #fff; }
+[data-theme="dark"] .people-initial { background: #403354; color: #dacafa; }
+[data-theme="dark"] .people-success { color: #a3e2c4; }
+[data-theme="dark"] .finance-tabs button[aria-pressed="true"] { background: #5653b8; color: #fff; }
+[data-theme="dark"] .finance-success { color: #a3e2c4; }
+
+/* Keep text and its surface paired in both themes, including nested legacy panels. */
+.demand-details { background: var(--panel-muted); color: var(--on-surface); border-color: var(--outline); }
+.detail-description > strong { color: var(--on-surface); font-size: 13px; }
+.detail-description p { color: var(--on-surface-variant); font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }
+.detail-facts span { color: var(--on-surface-variant); font-size: 12px; line-height: 1.6; }
+.detail-facts b { color: var(--on-surface); font-size: 12px; }
+.demand-code > div > span, .demand-amount strong { color: var(--on-surface); font-size: 13px; }
+.demand-code small, .demand-info p, .demand-amount span { color: var(--on-surface-variant); font-size: 12px; }
+.demand-info h3 { font-size: 14px; }
+.demand-symbol, .registration-avatar { background: var(--soft-accent-surface); color: var(--soft-accent-ink); }
+.expand-button { color: var(--on-surface-variant); }
+.expand-button:hover { color: var(--on-surface); background: var(--secondary); }
+.registration-person strong { font-size: 14px; }
+.registration-person span, .registration-person small { color: var(--on-surface-variant); font-size: 12px; }
+.chart-total strong { color: var(--on-surface); }
+.chart-total small, .chart-legend span { color: var(--on-surface-variant); }
+.stage-chart { border-color: var(--outline); }
+.timeline-top strong { font-size: 13px; }
+.timeline-top time, .timeline-content small { color: var(--on-surface-variant); font-size: 12px; }
+.timeline-content p { color: var(--on-surface-variant); font-size: 13px; }
+.timeline::before { background: var(--outline); }
+.timeline-dot { border-color: var(--panel-surface); }
+.table-empty, td small { color: var(--on-surface-variant); font-size: 12px; }
+.results-count { color: var(--on-surface-variant); font-size: 12px; }
+.search-box input::placeholder, .field-label input::placeholder, .field-label textarea::placeholder { color: var(--placeholder-color); opacity: 1; }
+@media (max-width:520px) {
+  .detail-facts span { flex-wrap: wrap; gap: 4px 12px; }
+  .detail-description .history-link { white-space: normal; text-align: left; line-height: 1.5; }
 }

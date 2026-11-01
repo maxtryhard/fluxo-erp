@@ -4,6 +4,10 @@ import App from './App';
 import './styles.css';
 import './reference-layout.css';
 import './theme.css';
+import './navigation-dock.css';
+import './system-guide.css';
+import './guided-tour.css';
+import './entry-page.css';
 import { applyTheme, preferredTheme } from './theme';
 
 applyTheme(preferredTheme());

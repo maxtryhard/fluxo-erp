@@ -61,10 +61,33 @@ The homepage was inspected in the browser, along with the Character Animation ca
 
 ## Combined direction
 
-Fluxo should feel like a professional CRM/ERP workspace: light navigation, warm neutral surfaces, ink-like text, restrained periwinkle interactive accents, and stage-based demand cards. Use compact real-data summaries and keep the integrated Commercial → Finance → People handoff more prominent than decoration. The entry screen uses a light split login and factual workflow introduction. Never claim visual review of a reference that could not be opened.
+Fluxo should feel like a professional CRM/ERP workspace: light navigation, warm neutral surfaces, ink-like text, restrained periwinkle interactive accents, and stage-based demand cards. Use compact real-data summaries and keep the integrated Commercial → Finance → People handoff more prominent than decoration. The public entry uses a centered landing hero and workflow introduction, linking to separate login and registration screens. Never claim visual review of a reference that could not be opened.
 
 ## UI UX Pro Max methodology reference
 
 Source: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
 
 This project skill uses the source's high-level workflow: identify the product and stack, establish a coherent design direction before coding, prioritize accessibility and interaction before polish, and verify responsive and stack-specific behavior. It is an original, project-specific workflow; it does not copy or vendor the upstream skill's datasets, scripts, or prose.
+
+## Collect UI — feature presentation references (November 2026)
+
+The user supplied two specific references:
+
+- https://collectui.com/designs/features-ui-design-inspiration/a6e4821a-c70e-4db5-bf49-2b70dd79b67e — rendered in Chrome as a Features bento layout: a large dark lead card, smaller white feature cards, light gray canvas, and a purple block illustration.
+- https://collectui.com/designs/features-ui-design-inspiration/62fb0896-3e8c-43c9-a2cd-04b1ebfba6e3 — rendered as a medical widget-card demonstration. Frames extracted from the public video show stacked cards alternating between compact headings and expanded content, including a chart, report and reminder. These are animation observations from sampled frames, not evidence of a particular interactive trigger.
+
+The generic SSR social preview pointed to unrelated media, so the actual client-rendered designs were inspected before interpreting the references. Fluxo adapts the mosaic and expandable explanation pattern for Como usar / Conheça o Fluxo, with authored icons, real capability descriptions and authorized shortcuts. The medical and AI capabilities of the reference are not product requirements.
+
+## Collect UI — public introduction hero (November 2026)
+
+Source: https://collectui.com/designs/hero-section-ui-design-inspiration/4a7515ca-1436-4653-a99e-b3f4ff49998b
+
+The rendered detail page supplied a video (`ext_tw_video/2097580863554752512/pu/vid/avc1/1154x720/5KrYahq2O5buCQ6C-optimized.mp4`). Sampled frames at 2 and 6 seconds show a large rounded pastel-gradient surround, a row of feature icon selectors, and a light card pairing explanatory copy with a feature illustration. Different frames display scheduling and payment content. This supports the tabbed feature-presentation pattern; it does not establish the exact interaction trigger or transition timing.
+
+Fluxo translates this into four factual system/sector explanations in the existing warm-neutral, periwinkle and orange palette, with buttons leading to separate login and registration screens. Illustrations are authored CSS/SVG workflow steps. Scheduling, embedded bank payments and unrelated reference features are not added. No reference media is shipped; static gradients and brief user-triggered transitions keep the public entry lightweight and honor reduced motion.
+
+Revision after the user's correction: the entire 7.8-second video was sampled at half-second intervals. Early frames show a centered hero over the feature stage; subsequent frames show the stage filling the view with a close control, then different feature cards, and finally the surrounding page again. The implementation now preserves this composition through a centered introductory heading, floating connected icon tabs, a two-part feature card and an explicitly expandable gradient stage. The expansion is intentionally activated by a button; sampled frames alone do not prove the original expansion trigger. The user’s latest clarification supersedes the earlier side-by-side access layout: the initial screen is a landing page with buttons leading to separate login and registration screens.
+
+The user explicitly requires the presentation structure to follow the reference, beyond borrowing isolated visual motifs. Preserve the observed hierarchy: header, centered hero with access actions, gradient feature stage, centered lower explanation/CTA and four explanatory cards. Adapt the four lower cards to the existing Commercial → Finance → People → operation-follow-up flow. Do not reintroduce an embedded authentication sidebar.
+
+The user subsequently explicitly requested the scroll animation itself. The expansion now follows native page progress through a sticky scene: grow, hold/change sectors, contract, release. This supersedes the earlier manual expand-dialog interpretation. Respect reduced motion and short-screen fallbacks; never intercept wheel/touch input. The user also requested less decorative presentation copy: remove counters, redundant tags, uppercase filler and fragmented slogans, and use complete factual sentences about Fluxo's actual functions.

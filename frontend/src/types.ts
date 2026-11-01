@@ -87,3 +87,57 @@ export type SectorMessage = {
   department: string;
   created_at: string;
 }
+
+export type Employee = {
+  id: string;
+  name: string;
+  job_title: string;
+  skills: string[];
+  capacity_percent: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+export type TeamAllocation = {
+  id: string;
+  employee_id: string;
+  demand_id: string;
+  assignment_role: string;
+  starts_on: string;
+  ends_on: string;
+  dedication: number;
+  cancelled_at: string | null;
+  cancellation_reason: string | null;
+  created_by: string;
+  created_at: string;
+};
+
+export type FinancialDirection = 'RECEIVABLE' | 'PAYABLE';
+export type FinancialEntry = {
+  id: string;
+  batch_id: string;
+  demand_id: string | null;
+  direction: FinancialDirection;
+  description: string;
+  counterparty: string;
+  amount_cents: number;
+  due_on: string;
+  installment_number: number;
+  installment_count: number;
+  notes: string;
+  settled_on: string | null;
+  settled_by: string | null;
+  cancelled_at: string | null;
+  cancellation_reason: string | null;
+  created_by: string;
+  created_at: string;
+};
+export type FinancialEvent = {
+  id: string;
+  entry_id: string;
+  action: 'CREATED' | 'SETTLED' | 'CANCELLED';
+  author_id: string;
+  author_name: string;
+  details: string;
+  created_at: string;
+};
