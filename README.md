@@ -114,3 +114,69 @@ npm run test:finance --workspace=frontend
 Os testes SQL em `supabase/tests/finance_dashboard.sql` verificam divisão exata de parcelas, vencimento no fim do mês, reenvio idempotente, permissões por perfil, baixas e cancelamentos inválidos, trilha de auditoria e preservação da etapa das demandas. Execute somente em Supabase de teste; as fixtures são revertidas por rollback.
 
 Para manutenção manual desta área: altere `frontend/src/components/FinanceOverview.tsx` para os indicadores; `FinanceForms.tsx` para os formulários; `FinancePage.tsx` para abas e filtros; `frontend/src/services/finance.ts` para solicitações; e `frontend/src/utils/finance.ts` para cálculos. Alterações futuras no banco devem entrar em uma nova migration, sem reexecutar ou editar scripts já aplicados.
+
+## Navegação em cápsula
+
+A barra horizontal usa botões circulares e uma cápsula deslizante para indicar a página atual. As cores são laranja no tema claro e lilás no tema escuro. Os nomes aparecem ao passar o mouse ou focar pelo teclado; no celular, a barra permite rolagem horizontal. As páginas, a busca e as permissões existentes são preservadas.
+
+Para alterar manualmente o visual, edite `frontend/src/navigation-dock.css` (cores `--dock-*`, tamanhos e animações). Para adicionar/remover destinos, mantenha a configuração de `navGroups`, `Page` e renderização em `frontend/src/App.tsx`. `frontend/src/components/NavigationDock.tsx` controla o indicador e os rótulos. Essa alteração é somente de frontend e não exige SQL no Supabase.
+
+## Guia visual do sistema
+
+No cabeçalho, **Como usar** abre o **Conheça o Fluxo**. Os cards apresentam o fluxo completo e o papel de Comercial, Financeiro, RH, Demandas e Conversas. Clique em um card para ler o passo a passo. Atalhos aparecem apenas para áreas acessíveis ao perfil atual.
+
+Um convite opcional aparece na Visão geral e pode ser dispensado. A preferência fica só no navegador; o guia continua disponível no cabeçalho. Essa parte não precisa de SQL no Supabase.
+
+Para alterar manualmente o guia:
+
+- Textos, etapas e observações: `frontend/src/content/systemGuide.ts`.
+- Comportamento do diálogo e do convite: `frontend/src/components/SystemGuide.tsx`.
+- Cores, cards e responsividade: `frontend/src/system-guide.css`.
+- Botão do cabeçalho e autorização dos atalhos: `frontend/src/App.tsx`.
+
+O guia foi conferido em Chrome com perfil temporário, incluindo expansão, atalhos autorizados/restritos, dispensa do convite, Escape, navegação por teclado e layout de 375px nos dois temas. A página temporária de teste não faz parte do produto.
+
+O botão **Iniciar tour guiado** percorre as telas reais, destaca cada controle e explica seu uso. **Avançar**, **Voltar**, **Concluir**, o X e Escape controlam a visita. **Ver na prática** inicia somente o setor escolhido. O percurso usa as permissões da navegação e troca apenas páginas/abas, sem enviar formulários ou executar ações operacionais.
+
+Para editar o tour manualmente:
+
+- Textos, ordem, setor e seletor de cada destaque: `frontend/src/content/systemTour.ts`.
+- Destaque, posicionamento, teclado e botões: `frontend/src/components/GuidedTour.tsx`.
+- Cores e tamanhos: `frontend/src/guided-tour.css`.
+- Elementos destacados: atributos `data-tour` em `App.tsx`, `NavigationDock.tsx`, `FinancePage.tsx`, `PeoplePage.tsx` e `Communication.tsx`.
+
+Ao adicionar uma etapa, use um alvo existente e mantenha `activate` somente para botões de troca de aba. Nunca use botões de envio, aprovação ou baixa. Nenhuma migration é necessária.
+
+## Landing page e telas de acesso
+
+A página inicial é uma landing page: hero central, objetivo do Fluxo, botões para **Criar minha conta** e **Entrar no Fluxo**, e apresentação interativa dos setores. Ela não contém campos de login ou cadastro. Os mesmos destinos aparecem no cabeçalho.
+
+- `#/`: apresentação pública.
+- `#/entrar`: tela exclusiva de login.
+- `#/cadastro`: tela exclusiva de solicitação de cadastro.
+
+As telas de acesso mantêm a validação e a aprovação administrativa existentes. **Voltar à apresentação**, o logo e os botões Voltar/Avançar do navegador permitem navegar entre elas. Links diretos e recarregamento funcionam com o roteamento por fragmento, sem uma nova configuração de rotas no Vercel. Os campos de senha são descartados ao trocar de tela.
+
+Para editar manualmente:
+
+- Navegação pública, cabeçalho e composição das telas: `frontend/src/components/PublicEntry.tsx`.
+- Hero, botões, textos, ícones e ilustrações dos setores: `frontend/src/components/ProductPresentation.tsx` (`topics`).
+- Login, cadastro e estados de envio: `frontend/src/components/LoginScreen.tsx`.
+- Layout, cores, tamanhos e animações: `frontend/src/entry-page.css`.
+- Autenticação real: `frontend/src/services/api.ts`; integração com a sessão: `frontend/src/App.tsx`.
+
+A apresentação cresce conforme a página é rolada, permanece em destaque enquanto apresenta os setores e recolhe antes da seção seguinte. A roda do mouse, o toque e o teclado mantêm a rolagem normal. O link Continuar a página permite pular diretamente para Como funciona. Os ícones também permitem escolher o setor manualmente. As ilustrações não usam dados reais.
+
+A apresentação usa CSS/SVG e não baixa vídeos, imagens ou fontes externas. Financeiro, RH, gráficos e tour continuam carregados sob demanda. Essa mudança não exige SQL no Supabase.
+
+A navegação foi conferida em Chrome de 320 a 1440px nos dois temas, incluindo ausência de formulários na inicial, CTAs do hero/cabeçalho, links diretos, recarregamento, histórico do navegador, foco e acesso a partir da apresentação. Formulários são validados com callbacks simulados para não criar contas reais durante os testes.
+
+A ordem visual da referência é mantida na landing: cabeçalho com navegação e acesso → hero central com duas ações → apresentação interativa no gradiente → explicação central → quatro cards do fluxo. A seção inferior e seus textos ficam em `WorkflowPresentation`, dentro de `ProductPresentation.tsx`. Os links **O sistema** e **Como funciona** navegam pelas seções da inicial; as ações de acesso continuam abrindo telas separadas.
+
+A animação de rolagem fica em `frontend/src/components/ScrollPresentation.tsx`. A altura do trecho é definida por `.entry-scroll-scene[data-scroll="active"]` em `entry-page.css`. O componente calcula o crescimento e o recolhimento do painel e troca o setor somente ao atravessar cada faixa de progresso. Não intercepta eventos da roda do mouse nem atualiza o estado React a cada pixel. Usa um listener passivo, `requestAnimationFrame` e `ResizeObserver`, com limpeza ao sair da tela.
+
+Com movimento reduzido ativado, ou quando o conteúdo não cabe na altura disponível, o painel fica no fluxo normal e as abas funcionam manualmente. Textos da landing usam frases diretas sobre as funções do sistema; contadores decorativos, números de etapas, frases de efeito e rótulos redundantes foram removidos.
+
+O fundo da landing fica em `frontend/src/components/LandingBackground.tsx`, com ondas SVG e gradientes leves. O movimento pausa quando a aba está oculta e respeita movimento reduzido. O card começa com até 820px e cresce até 18% durante a ampliação, limitado ao espaço disponível. A suavização da rolagem termina quando o painel alcança o destino, sem um loop permanente de JavaScript.
+
+O trecho animado usa 200svh. A margem de saída compensa o espaço reservado pelo painel fixo, aproximando a seção seguinte; o espaçamento visível é definido pelo padding de `.entry-workflow`. As transições de texto, ilustração e linhas do card usam apenas opacidade e transformações. Estas alterações não exigem migrations.
