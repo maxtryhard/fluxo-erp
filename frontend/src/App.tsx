@@ -1,23 +1,18 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import {
   Activity,
   ArrowDownToLine,
   ArrowRight,
-  BriefcaseBusiness,
   BookOpen,
   Check,
   ChevronDown,
   CircleDollarSign,
   ClipboardList,
   FileText,
-  LayoutDashboard,
   LogOut,
-  MessageSquare,
   Plus,
   Search,
   ShieldCheck,
-  UserRound,
-  Users,
   X,
 } from 'lucide-react';
 import { api } from './services/api';
@@ -30,25 +25,18 @@ import { GuideInvitation, SystemGuide } from './components/SystemGuide';
 import { getTourSteps, type TourStep } from './content/systemTour';
 import type { GuideDestination } from './content/systemGuide';
 import { DemandReview } from './components/DemandReview';
+import { RouteFeedback } from './components/RouteFeedback';
+import { useAuthSession } from './hooks/useAuthSession';
+import { canAccess, modules, resolveRoute, safeReturnPath, type Page } from './routing/routes';
+import { getNavigation } from './routing/navigation';
+import { navigate, useBrowserRoute } from './routing/browser';
+import { Link } from './routing/Link';
 import type { CreateDemandInput, Demand, DemandHistory, DemandStatus, Overview, RegistrationRequest, Role, User } from './types';
 
 const DataVisualization = lazy(() => import('./components/DataVisualization'));
 const GuidedTour = lazy(() => import('./components/GuidedTour'));
 const PeoplePage = lazy(() => import('./components/PeoplePage').then((module) => ({ default: module.PeoplePage })));
 const FinancePage = lazy(() => import('./components/FinancePage').then((module) => ({ default: module.FinancePage })));
-
-type Page = 'overview' | 'demands' | 'commercial' | 'finance' | 'people' | 'registrations' | 'profile' | 'chat';
-
-const pageLabels: Record<Page, string> = {
-  overview: 'Visão geral',
-  chat: 'Conversas',
-  demands: 'Todas as demandas',
-  commercial: 'Comercial',
-  finance: 'Financeiro',
-  people: 'Pessoas & RH',
-  registrations: 'Cadastros pendentes',
-  profile: 'Meu perfil',
-};
 
 const statusLabels: Record<string, string> = {
   ORCAMENTO: 'Em orçamento',
@@ -80,38 +68,11 @@ const roleLabels: Record<Role, string> = {
   GERENCIA: 'Gerência',
 };
 
-const navGroups: { label: string; items: { page: Page; label: string; icon: typeof LayoutDashboard; roles?: Role[]; keywords?: string[] }[] }[] = [
-  {
-    label: 'Workspace',
-    items: [{ page: 'overview', label: 'Visão geral', icon: LayoutDashboard }],
-  },
-  {
-    label: 'Operação',
-    items: [
-      { page: 'demands', label: 'Demandas', icon: ClipboardList },
-      { page: 'chat', label: 'Conversas', icon: MessageSquare, keywords: ['chat', 'mensagens', 'setores'] },
-      { page: 'commercial', label: 'Comercial', icon: BriefcaseBusiness, roles: ['ADMIN', 'COMERCIAL'] },
-      { page: 'finance', label: 'Financeiro', icon: CircleDollarSign, roles: ['ADMIN', 'FINANCEIRO', 'GERENCIA'] },
-      { page: 'people', label: 'Pessoas & RH', icon: Users, roles: ['ADMIN', 'RH', 'GERENCIA'] },
-    ],
-  },
-  {
-    label: 'Administração',
-    items: [{ page: 'registrations', label: 'Cadastros pendentes', icon: ShieldCheck, roles: ['ADMIN'] }],
-  },
-  {
-    label: 'Conta',
-    items: [{ page: 'profile', label: 'Meu perfil', icon: UserRound, keywords: ['perfil', 'conta', 'usuário', 'usuario', 'account'] }],
-  },
-];
-
 function App() {
-  const [user, setUser] = useState<User | null>(null);
-  const [page, setPage] = useState<Page>('overview');
+  const route = useBrowserRoute();
   const [demands, setDemands] = useState<Demand[]>([]);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [registrationRequests, setRegistrationRequests] = useState<RegistrationRequest[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
@@ -121,48 +82,52 @@ function App() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [tourSteps, setTourSteps] = useState<TourStep[] | null>(null);
-  const updateAvatar = (url: string) => setUser((current) => current ? { ...current, avatarUrl: url } : current);
   const [navSearch, setNavSearch] = useState('');
 
-  const refresh = useCallback(async () => {
-    const data = await api.demands();
-    setDemands(data);
-    setOverview(await api.overview());
+  const resetPrivateState = useCallback(() => {
+    setDemands([]); setOverview(null); setRegistrationRequests([]); setHistory([]); setHistoryDemand(null);
+    setShowCreate(false); setProfileOpen(false); setGuideOpen(false); setTourSteps(null);
+    setSearch(''); setNavSearch(''); setNavSearchOpen(false); setError('');
   }, []);
+  const { user, loading, sessionError, acceptUser, clearSession, updateUser, epoch } = useAuthSession(resetPrivateState);
+  const decision = resolveRoute(route.pathname, route.search, user);
+  const page: Page = decision.kind === 'protected' ? decision.page : 'overview';
+  const redirect = decision.kind === 'redirect' ? decision.to : undefined;
+  const routePath = useRef(route.pathname);
+  routePath.current = route.pathname;
+  const setPage = (destination: Page) => { if (canAccess(user, destination)) navigate(modules[destination].path); };
+  const identityVersion = epoch.current;
+  const updateAvatar = (url: string) => {
+    if (identityVersion === epoch.current) updateUser((current) => ({ ...current, avatarUrl: url }));
+  };
 
+  useEffect(() => { if (!loading && redirect) navigate(redirect, { replace: true }); }, [loading, redirect]);
+  useEffect(() => {
+    setSearch(''); setHistoryDemand(null); setShowCreate(false); setProfileOpen(false); setGuideOpen(false);
+    setNavSearch(''); setNavSearchOpen(false);
+    if (!loading && user) document.querySelector<HTMLElement>('.page-content')?.focus({ preventScroll: true });
+  }, [route.pathname, loading, user?.id]);
+
+  const refresh = useCallback(async () => {
+    const version = epoch.current;
+    const [data, summary] = await Promise.all([api.demands(), api.overview()]);
+    if (version !== epoch.current) return;
+    setDemands(data); setOverview(summary);
+  }, [epoch]);
   const refreshRegistrationRequests = useCallback(async () => {
     if (user?.role !== 'ADMIN') return;
-    setRegistrationRequests(await api.registrationRequests());
-  }, [user]);
+    const version = epoch.current;
+    const requests = await api.registrationRequests();
+    if (version === epoch.current) setRegistrationRequests(requests);
+  }, [user?.id, user?.role, epoch]);
 
   useEffect(() => {
-    void refreshRegistrationRequests().catch((refreshError: unknown) => {
-      setError(refreshError instanceof Error ? refreshError.message : 'Não foi possível carregar os cadastros pendentes.');
+    if (!user) return;
+    const version = epoch.current;
+    void Promise.all([refresh(), refreshRegistrationRequests()]).catch((error: unknown) => {
+      if (version === epoch.current) setError(error instanceof Error ? error.message : 'Não foi possível carregar os dados.');
     });
-  }, [refreshRegistrationRequests]);
-
-  useEffect(() => {
-    let active = true;
-    const load = async () => {
-      try {
-        const profile = await api.currentUser();
-        if (!active) return;
-        if (!profile) return;
-        setUser(profile);
-        await refresh();
-      } catch (loadError) {
-        if (active) {
-          setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar sua sessão.');
-        }
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-    void load();
-    return () => {
-      active = false;
-    };
-  }, [refresh]);
+  }, [user?.id, user?.role, refresh, refreshRegistrationRequests, epoch]);
 
   const filteredDemands = useMemo(() => {
     const query = search.trim().toLocaleLowerCase('pt-BR');
@@ -184,70 +149,69 @@ function App() {
     setError('');
     try {
       const loggedInUser = await api.login(email, password);
-      setUser(loggedInUser);
-      setPage('overview');
-      await refresh();
+      acceptUser(loggedInUser);
+      navigate(safeReturnPath(new URLSearchParams(route.search).get('retorno')) ?? modules.overview.path, { replace: true });
     } catch (loginError) {
       setError(loginError instanceof Error ? loginError.message : 'Não foi possível entrar.');
       throw loginError;
     }
   };
 
-  const handleRegister = async (name: string, email: string, password: string): Promise<boolean> => {
+  const handleRegister = async (name: string, email: string, password: string): Promise<void> => {
     setError('');
     try {
       await api.register(name, email, password);
-      return true;
     } catch (registrationError) {
       setError(registrationError instanceof Error ? registrationError.message : 'Não foi possível enviar seu cadastro.');
-      return false;
+      throw registrationError;
     }
   };
 
   const handleLogout = async () => {
-    await api.logout();
-    setGuideOpen(false);
-    setTourSteps(null);
-    setUser(null);
-    setDemands([]);
-    setOverview(null);
-    setPage('overview');
+    try {
+      await api.logout();
+      clearSession();
+      navigate('/entrar', { replace: true });
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Não foi possível encerrar sua sessão. Tente novamente.');
+    }
   };
 
   const showHistory = async (item: Demand) => {
+    const version = epoch.current, path = routePath.current;
     try {
-      setHistory(await api.demandHistory(item.id));
-      setHistoryDemand(item);
+      const events = await api.demandHistory(item.id);
+      if (version !== epoch.current || path !== routePath.current) return;
+      setHistory(events); setHistoryDemand(item);
     } catch (historyError) {
+      if (version !== epoch.current) return;
       setError(historyError instanceof Error ? historyError.message : 'Não foi possível carregar o histórico.');
     }
   };
 
   const runAction = async (action: () => Promise<void>) => {
     setError('');
+    const version = epoch.current;
     try {
       await action();
+      if (version !== epoch.current) return;
       await refresh();
       await refreshRegistrationRequests();
     } catch (actionError) {
+      if (version !== epoch.current) return;
       setError(actionError instanceof Error ? actionError.message : 'Não foi possível salvar as alterações.');
     }
   };
 
-  if (loading) {
+  if (loading || redirect) {
     return <div className="loading-screen"><span className="spinner" />Carregando seu espaço...</div>;
   }
 
   if (!user) {
-    return <PublicEntry onLogin={handleLogin} onRegister={handleRegister} error={error} />;
+    return <PublicEntry page={decision.kind === 'public' ? decision.page : 'login'} onLogin={handleLogin} onRegister={handleRegister} error={error || sessionError} />;
   }
 
-  const authorizedNavGroups = navGroups
-    .map((group) => ({
-      ...group,
-      items: group.items.filter((item) => !item.roles || item.roles.includes(user.role)),
-    }))
-    .filter((group) => group.items.length > 0);
+  const authorizedNavGroups = getNavigation(user);
   const normalizedNavSearch = navSearch.trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const visibleNavGroups = authorizedNavGroups
     .map((group) => ({
@@ -262,7 +226,8 @@ function App() {
       }),
     }))
     .filter((group) => group.items.length > 0);
-  const pageTitle = pageLabels[page];
+  const routeBlocked = decision.kind === 'forbidden' || decision.kind === 'not-found';
+  const pageTitle = decision.kind === 'forbidden' ? 'Acesso restrito' : decision.kind === 'not-found' ? 'Página não encontrada' : modules[page].title;
   const requestCount = demands.filter((item) => !['ENTREGUE', 'CANCELADO'].includes(item.status)).length;
   const totalBudget = overview?.totalBudget ?? demands.reduce((sum, item) => sum + (item.budgetTotal ?? 0), 0);
   const totalInvoiced = overview?.totalInvoiced ?? demands.reduce((sum, item) => sum + (item.invoicedValue ?? 0), 0);
@@ -276,17 +241,16 @@ function App() {
 
   return (
     <div className="app-shell horizontal-shell">
-      <main className="main-area" data-tour-page={page}>
+      <main className="main-area" data-tour-page={routeBlocked ? 'blocked' : page}>
         <header className="topbar">
-          <a
+          <Link
             className="brand topbar-brand"
-            href="#"
+            to="/dashboard"
             aria-label="Fluxo — ir para Visão geral"
-            onClick={(event) => { event.preventDefault(); setPage('overview'); }}
           >
             <span className="brand-icon"><Activity size={18} strokeWidth={2.2} /></span>
             <span>fluxo<span className="brand-period">.</span><small>GESTÃO INTEGRADA</small></span>
-          </a>
+          </Link>
           <div className="breadcrumb"><span>Workspace</span><span className="crumb-separator">/</span><strong>{pageTitle}</strong></div>
           <div className="topbar-right">
             <button type="button" className="guide-trigger" data-tour="guide-trigger" aria-label="Como usar o Fluxo" aria-haspopup="dialog" onClick={() => setGuideOpen(true)}><BookOpen size={18} aria-hidden="true" /><span>Como usar</span></button>
@@ -308,15 +272,15 @@ function App() {
           </div>
         </header>
         <div className="navigation-bar">
-          <NavigationDock activePage={page}>
+          <NavigationDock activePage={routeBlocked ? '' : page}>
             {visibleNavGroups.flatMap((group) => group.items).map(({ page: itemPage, label, icon: Icon }) => (
-              <button key={itemPage} type="button" className={`dock-item ${page === itemPage ? 'dock-item-active' : ''}`}
-                aria-label={label} aria-current={page === itemPage ? 'page' : undefined}
-                onClick={() => { setPage(itemPage); setNavSearch(''); setNavSearchOpen(false); }}>
+              <Link key={itemPage} to={modules[itemPage].path} className={`dock-item ${!routeBlocked && page === itemPage ? 'dock-item-active' : ''}`}
+                aria-label={label} aria-current={!routeBlocked && page === itemPage ? 'page' : undefined}
+                onClick={() => { setNavSearch(''); setNavSearchOpen(false); }}>
                 <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
                 <span className="dock-label">{label}</span>
                 {itemPage === 'registrations' && registrationRequests.length > 0 && <span className="dock-count" aria-label={`${registrationRequests.length} cadastros pendentes`}>{registrationRequests.length}</span>}
-              </button>
+              </Link>
             ))}
             {!visibleNavGroups.length && <span className="dock-empty" role="status">Nenhuma página encontrada.</span>}
             <span className="dock-divider" aria-hidden="true" />
@@ -330,11 +294,11 @@ function App() {
             <button type="button" aria-label="Fechar busca" onClick={() => { setNavSearchOpen(false); setNavSearch(''); }}><X size={16} /></button>
           </label>}
         </div>
-        <div className="page-content">
-          <div className="page-transition" key={page}>
-          {page === 'overview' && <GuideInvitation onOpen={() => setGuideOpen(true)} />}
+        <div className="page-content" tabIndex={-1}>
+          <div className="page-transition" key={route.pathname}>
+          {!routeBlocked && page === 'overview' && <GuideInvitation onOpen={() => setGuideOpen(true)} />}
           {error && <div className="alert" role="alert"><span>{error}</span><button aria-label="Fechar aviso" onClick={() => setError('')}><X size={16} /></button></div>}
-          {page === 'chat' ? (
+          {routeBlocked ? <RouteFeedback denied={decision.kind === 'forbidden'} /> : page === 'chat' ? (
             <section><div className="page-heading"><div><div className="eyebrow">COLABORAÇÃO</div><h1>Conversas</h1><p>Contexto compartilhado para uma operação conectada.</p></div></div><Communication user={user} /></section>
           ) : page === 'registrations' ? (
             <RegistrationRequestsPage requests={registrationRequests} onApprove={(id, role) => void runAction(() => api.approveRegistration(id, role))} onReject={(id) => void runAction(() => api.rejectRegistration(id))} />
@@ -380,7 +344,7 @@ function App() {
         if (authorizedNavGroups.some((group) => group.items.some((item) => item.page === destination))) setPage(destination);
       }} /></Suspense>}
       {profileOpen && <ProfileDialog user={user} roleLabel={roleLabels[user.role]} onAvatarChange={updateAvatar} onClose={() => setProfileOpen(false)} />}
-      {showCreate && <CreateDemandModal onClose={() => setShowCreate(false)} onSubmit={(data) => runAction(async () => { await api.createDemand(data); setShowCreate(false); setPage('demands'); })} />}
+      {showCreate && <CreateDemandModal onClose={() => setShowCreate(false)} onSubmit={(data) => runAction(async () => { const version = epoch.current; await api.createDemand(data); if (version !== epoch.current) return; setShowCreate(false); setPage('demands'); })} />}
       {historyDemand && <HistoryModal demand={historyDemand} history={history} onClose={() => setHistoryDemand(null)} />}
     </div>
   );
