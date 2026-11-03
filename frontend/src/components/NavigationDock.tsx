@@ -28,12 +28,12 @@ export function NavigationDock({ activePage, children }: { activePage: string; c
     }
     const observer = new ResizeObserver(measure);
     observer.observe(element);
-    element.querySelectorAll('button').forEach((button) => observer.observe(button));
+    element.querySelectorAll('button, a[href]').forEach((button) => observer.observe(button));
     return () => observer.disconnect();
   }, [activePage, children]);
 
   const showHint = (target: EventTarget | null) => {
-    const button = target instanceof Element ? target.closest<HTMLButtonElement>('button[aria-label]') : null;
+    const button = target instanceof Element ? target.closest<HTMLElement>('button[aria-label], a[aria-label]') : null;
     if (!button) return;
     const bounds = button.getBoundingClientRect();
     setHint({ text: button.getAttribute('aria-label') ?? '', left: Math.max(115, Math.min(window.innerWidth - 115, bounds.left + bounds.width / 2)), top: Math.max(8, bounds.top - 42) });

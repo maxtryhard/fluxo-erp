@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "tsc --noEmit",
-    "test:finance": "node --test tests/finance.test.mjs"
+    "test:finance": "node --test tests/finance.test.mjs",
+    "test:access": "node --test tests/routing.test.mjs",
+    "test:auth": "node --test tests/auth.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

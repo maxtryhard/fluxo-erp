@@ -7,7 +7,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test:access": "npm run build && node --test tests/access.test.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

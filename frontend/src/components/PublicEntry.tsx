@@ -1,23 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Activity } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { LoginScreen, type AccessCallbacks } from './LoginScreen';
 import { ProductPresentation } from './ProductPresentation';
 import { LandingBackground } from './LandingBackground';
 
-type PublicPage = 'home' | 'login' | 'register';
-function currentPage(): PublicPage {
-  return location.hash === '#/entrar' ? 'login' : location.hash === '#/cadastro' ? 'register' : 'home';
-}
+import type { PublicPage } from '../routing/routes';
+import { Link } from '../routing/Link';
 
-export function PublicEntry(props: AccessCallbacks) {
-  const [page, setPage] = useState(currentPage);
+export function PublicEntry({ page, ...props }: AccessCallbacks & { page: PublicPage }) {
   const initialPage = useRef(page);
-  useEffect(() => {
-    const sync = () => setPage(currentPage());
-    window.addEventListener('hashchange', sync);
-    return () => window.removeEventListener('hashchange', sync);
-  }, []);
   useEffect(() => {
     if (initialPage.current === page) return;
     initialPage.current = page;
@@ -27,9 +19,9 @@ export function PublicEntry(props: AccessCallbacks) {
   return <div className={`login-layout entry-page entry-${page}`}>
     {page === 'home' && <LandingBackground />}
     <header className="entry-header">
-      <a className="brand entry-brand" href="#/" aria-label="Fluxo — início"><span className="brand-icon"><Activity size={23} /></span><span>fluxo</span></a>
+      <Link className="brand entry-brand" to="/" aria-label="Fluxo — início"><span className="brand-icon"><Activity size={23} /></span><span>fluxo</span></Link>
       {page === 'home' && <nav className="entry-section-nav" aria-label="Sobre o sistema"><a href="#apresentacao">O sistema</a><a href="#funcionamento">Como funciona</a></nav>}
-      <nav className="entry-header-nav" aria-label="Acesso ao Fluxo"><a href="#/entrar" aria-current={page === 'login' ? 'page' : undefined}>Entrar</a><a href="#/cadastro" className="entry-register-link" aria-current={page === 'register' ? 'page' : undefined}>Cadastrar</a></nav>
+      <nav className="entry-header-nav" aria-label="Acesso ao Fluxo"><Link to="/entrar" aria-current={page === 'login' ? 'page' : undefined}>Entrar</Link><Link to="/cadastro" className="entry-register-link" aria-current={page === 'register' ? 'page' : undefined}>Cadastrar</Link></nav>
       <ThemeToggle />
     </header>
     {page === 'home' ? <main className="entry-main"><ProductPresentation /></main> : <main className="entry-auth-main"><LoginScreen key={page} {...props} mode={page} /></main>}

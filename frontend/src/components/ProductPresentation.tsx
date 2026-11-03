@@ -1,5 +1,6 @@
 import { useState, type KeyboardEvent } from 'react';
 import { BriefcaseBusiness, CircleDollarSign, GitBranch, Users } from 'lucide-react';
+import { Link } from '../routing/Link';
 import { ScrollPresentation } from './ScrollPresentation';
 
 const topics = [
@@ -30,7 +31,7 @@ function Showcase({ selected, onSelect }: { selected: number; onSelect: (index: 
         {topics.map(({ id, label, icon: TabIcon }, index) => <button key={id} id={`entry-tab-${id}`} type="button" role="tab" aria-label={label} aria-selected={selected === index} aria-controls="entry-topic" tabIndex={selected === index ? 0 : -1} onClick={() => onSelect(index)} onKeyDown={(event) => navigate(event, index)}><TabIcon size={19} aria-hidden="true" /><span className="entry-tab-tooltip" aria-hidden="true">{label}</span></button>)}
       </div>
       <div className="entry-topic" id="entry-topic" role="tabpanel" aria-labelledby={`entry-tab-${topic.id}`} tabIndex={0}>
-        <div className="entry-topic-copy" key={topic.id}><span className="entry-topic-label">{topic.label}</span><h2>{topic.title}</h2><p>{topic.description}</p><a href="#/entrar" className="entry-learn-link">Entrar no sistema</a></div>
+        <div className="entry-topic-copy" key={topic.id}><span className="entry-topic-label">{topic.label}</span><h2>{topic.title}</h2><p>{topic.description}</p><Link to="/entrar" className="entry-learn-link">Entrar no sistema</Link></div>
         <div key={`illustration-${topic.id}`} className="entry-illustration-wrap"><SectorIllustration topic={topic} /></div>
       </div>
     </div>
@@ -46,7 +47,7 @@ function WorkflowPresentation() {
     { title: 'Acompanhamento', icon: GitBranch, description: 'Permite consultar o andamento, o histórico e as conversas de cada demanda, conforme o acesso da conta.' },
   ];
   return <section className="entry-workflow" id="funcionamento" aria-labelledby="entry-workflow-title">
-    <div className="entry-workflow-heading"><h2 id="entry-workflow-title">Cada setor acompanha sua parte do trabalho</h2><p>Uma demanda passa pelo Comercial, pelo Financeiro e pelo RH, com o histórico disponível para quem participa.</p><a className="entry-hero-primary" href="#/cadastro">Solicitar cadastro</a></div>
+    <div className="entry-workflow-heading"><h2 id="entry-workflow-title">Cada setor acompanha sua parte do trabalho</h2><p>Uma demanda passa pelo Comercial, pelo Financeiro e pelo RH, com o histórico disponível para quem participa.</p><Link className="entry-hero-primary" to="/cadastro">Solicitar cadastro</Link></div>
     <div className="entry-workflow-grid">{stages.map(({ title, icon: Icon, description }) => <article key={title}><Icon size={21} strokeWidth={1.6} /><h3>{title}</h3><p>{description}</p></article>)}</div>
   </section>;
 }
@@ -54,7 +55,7 @@ function WorkflowPresentation() {
 export function ProductPresentation() {
   const [selected, setSelected] = useState(0);
   return <section className="entry-presentation" id="apresentacao" aria-labelledby="entry-title">
-    <div className="entry-intro"><h1 id="entry-title" tabIndex={-1}>Sua equipe trabalhando<br />no mesmo sistema</h1><p>Conecte Comercial, Financeiro e RH para organizar as demandas e acompanhar o trabalho até a entrega.</p><div className="entry-hero-actions"><a className="entry-hero-primary" href="#/cadastro">Criar conta</a><a className="entry-hero-secondary" href="#/entrar">Entrar</a></div></div>
+    <div className="entry-intro"><h1 id="entry-title" tabIndex={-1}>Sua equipe trabalhando<br />no mesmo sistema</h1><p>Conecte Comercial, Financeiro e RH para organizar as demandas e acompanhar o trabalho até a entrega.</p><div className="entry-hero-actions"><Link className="entry-hero-primary" to="/cadastro">Criar conta</Link><Link className="entry-hero-secondary" to="/entrar">Entrar</Link></div></div>
     <ScrollPresentation onSectorChange={setSelected}><Showcase selected={selected} onSelect={setSelected} /></ScrollPresentation>
     <WorkflowPresentation />
   </section>;
