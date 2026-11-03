@@ -1,6 +1,11 @@
 import type { CreateDemandInput, Demand, DemandHistory, DemandStatus, Overview, RegistrationRequest, Role, User } from '../types';
 import { getSupabase } from './supabase';
 import { getAvatarUrl } from './avatar';
+import type { AuthChangeEvent } from '@supabase/supabase-js';
+import { isRole } from '../routing/routes';
+import { emailValidationError, normalizeAuthEmail } from '../utils/authValidation';
+import { AuthActionError, authServiceError } from './authErrors';
+import { withAuthAttempt } from './authAttempts';
 
 type ProfileRow = {
   id: string;
@@ -76,7 +81,7 @@ const getProfile = async (id: string): Promise<ProfileRow> => {
 
 const requireActiveProfile = async (id: string): Promise<User> => {
   const profile = await getProfile(id);
-  if (profile.status !== 'ACTIVE') {
+  if (profile.status !== 'ACTIVE' || !isRole(profile.role)) {
     const { error: signOutError } = await getSupabase().auth.signOut();
     if (signOutError) throw new Error(signOutError.message);
     throw new Error(
@@ -94,20 +99,41 @@ const ensureUpdated = (id: string | null): void => {
 
 
 export const api = {
+  observeSession(listener: (event: AuthChangeEvent) => void): () => void {
+    const timers = new Set<number>();
+    const { data } = getSupabase().auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') { listener(event); return; }
+      // Keep profile queries outside Auth's callback/lock and cancel queued work on unmount.
+      const timer = window.setTimeout(() => { timers.delete(timer); listener(event); }, 0);
+      timers.add(timer);
+    });
+    return () => { data.subscription.unsubscribe(); timers.forEach((timer) => clearTimeout(timer)); };
+  },
   async login(email: string, password: string): Promise<User> {
-    const { data, error } = await getSupabase().auth.signInWithPassword({ email, password });
-    if (error) throw new Error(error.message);
-    if (!data.user) throw new Error('O Supabase Auth não retornou o usuário autenticado.');
-    return requireActiveProfile(data.user.id);
+    const validation = emailValidationError(email);
+    if (validation) throw new AuthActionError(validation, 'validation');
+    if (password.length < 6 || password.length > 128) throw new AuthActionError('Confira sua senha.', 'validation');
+    return withAuthAttempt('login', async () => {
+      const { data, error } = await getSupabase().auth.signInWithPassword({ email: normalizeAuthEmail(email), password });
+      if (error) throw authServiceError(error);
+      if (!data.user) throw new Error('O Supabase Auth não retornou o usuário autenticado.');
+      return requireActiveProfile(data.user.id);
+    });
   },
 
   async register(name: string, email: string, password: string): Promise<void> {
-    const { error } = await getSupabase().auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: name.trim() } },
+    const validation = emailValidationError(email);
+    if (validation) throw new AuthActionError(validation, 'validation');
+    if (name.trim().length < 2 || name.trim().length > 100 || password.length < 12 || password.length > 128) {
+      throw new AuthActionError('Confira seu nome e use uma senha de 12 a 128 caracteres.', 'validation');
+    }
+    await withAuthAttempt('register', async () => {
+      const { error } = await getSupabase().auth.signUp({
+        email: normalizeAuthEmail(email), password,
+        options: { data: { full_name: name.trim() } },
+      });
+      if (error) throw authServiceError(error);
     });
-    if (error) throw new Error(error.message);
   },
 
   async currentUser(): Promise<User | null> {

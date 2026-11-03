@@ -151,11 +151,11 @@ Ao adicionar uma etapa, use um alvo existente e mantenha `activate` somente para
 
 A página inicial é uma landing page: hero central, objetivo do Fluxo, botões para **Criar minha conta** e **Entrar no Fluxo**, e apresentação interativa dos setores. Ela não contém campos de login ou cadastro. Os mesmos destinos aparecem no cabeçalho.
 
-- `#/`: apresentação pública.
-- `#/entrar`: tela exclusiva de login.
-- `#/cadastro`: tela exclusiva de solicitação de cadastro.
+- `/`: apresentação pública.
+- `/entrar`: tela exclusiva de login.
+- `/cadastro`: tela exclusiva de solicitação de cadastro.
 
-As telas de acesso mantêm a validação e a aprovação administrativa existentes. **Voltar à apresentação**, o logo e os botões Voltar/Avançar do navegador permitem navegar entre elas. Links diretos e recarregamento funcionam com o roteamento por fragmento, sem uma nova configuração de rotas no Vercel. Os campos de senha são descartados ao trocar de tela.
+As telas de acesso mantêm a validação e a aprovação administrativa existentes. **Voltar à apresentação**, o logo e os botões Voltar/Avançar do navegador permitem navegar entre elas. A navegação usa URLs independentes sem recarregar a aplicação. Links públicos antigos com fragmentos continuam compatíveis. No Vercel, o fallback de SPA está em `frontend/vercel.json`, para o projeto com Root Directory `frontend`. Os campos de senha são descartados ao trocar de tela.
 
 Para editar manualmente:
 
@@ -163,7 +163,7 @@ Para editar manualmente:
 - Hero, botões, textos, ícones e ilustrações dos setores: `frontend/src/components/ProductPresentation.tsx` (`topics`).
 - Login, cadastro e estados de envio: `frontend/src/components/LoginScreen.tsx`.
 - Layout, cores, tamanhos e animações: `frontend/src/entry-page.css`.
-- Autenticação real: `frontend/src/services/api.ts`; integração com a sessão: `frontend/src/App.tsx`.
+- Autenticação real: `frontend/src/services/api.ts`; integração com a sessão: `frontend/src/hooks/useAuthSession.ts`.
 
 A apresentação cresce conforme a página é rolada, permanece em destaque enquanto apresenta os setores e recolhe antes da seção seguinte. A roda do mouse, o toque e o teclado mantêm a rolagem normal. O link Continuar a página permite pular diretamente para Como funciona. Os ícones também permitem escolher o setor manualmente. As ilustrações não usam dados reais.
 
@@ -180,3 +180,10 @@ Com movimento reduzido ativado, ou quando o conteúdo não cabe na altura dispon
 O fundo da landing fica em `frontend/src/components/LandingBackground.tsx`, com ondas SVG e gradientes leves. O movimento pausa quando a aba está oculta e respeita movimento reduzido. O card começa com até 820px e cresce até 18% durante a ampliação, limitado ao espaço disponível. A suavização da rolagem termina quando o painel alcança o destino, sem um loop permanente de JavaScript.
 
 O trecho animado usa 200svh. A margem de saída compensa o espaço reservado pelo painel fixo, aproximando a seção seguinte; o espaçamento visível é definido pelo padding de `.entry-workflow`. As transições de texto, ilustração e linhas do card usam apenas opacidade e transformações. Estas alterações não exigem migrations.
+
+Consulte [Rotas e controle de acesso](docs/ROUTING_ACCESS.md) para a matriz de cargos, arquivos de manutenção e os testes de autorização.
+
+A revisão e as correções de permissões no banco estão em [SUPABASE_ACCESS_AUDIT.md](docs/SUPABASE_ACCESS_AUDIT.md). A migration `20261103191822_restrict_internal_trigger_execution.sql` já foi aplicada no projeto conectado; o histórico das migrations anteriores também foi reconciliado. Não reexecute os SQLs antigos no editor.
+
+
+Login e cadastro têm validação de e-mail e controle local de tentativas **sem CAPTCHA**. Login pausa cinco minutos após cinco credenciais inválidas em dez minutos; cadastro aceita até três envios em dez minutos e pausa dez minutos ao atingir o limite. Números e intervalos ficam em `frontend/src/utils/authAttemptPolicy.ts`. O estado persiste no mesmo navegador e é compartilhado entre abas; não equivale a bloqueio global de conta. Detalhes e limites estão em [PROPOSTA_PROTECAO_LOGIN_CADASTRO.md](docs/PROPOSTA_PROTECAO_LOGIN_CADASTRO.md). Testes: `npm run test:auth --workspace=frontend`.

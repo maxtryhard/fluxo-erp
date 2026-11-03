@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { z } from 'zod';
 import { AuthenticatedRequest } from '../middlewares/auth.js';
 import * as erpService from '../services/erpService.js';
+import { visibleDemand, visibleHistory } from '../services/accessPolicy.js';
 
 export const createCommercialDemandSchema = z.object({
   clientName: z.string().min(2, 'Nome do cliente é obrigatório'),
@@ -24,11 +25,14 @@ export const updateRhSchema = z.object({
 });
 
 export const listDemandsHandler = (req: AuthenticatedRequest, res: Response): void => {
-  const demands = erpService.getAllDemands();
+  if (!req.user) { res.status(401).json({ error: 'Não autenticado.' }); return; }
+  const role = req.user.role;
+  const demands = erpService.getAllDemands().map((demand) => visibleDemand(demand, role));
   res.status(200).json({ demands });
 };
 
 export const getDemandDetailsHandler = (req: AuthenticatedRequest, res: Response): void => {
+  if (!req.user) { res.status(401).json({ error: 'Não autenticado.' }); return; }
   const { id } = req.params;
   const demand = erpService.getDemandById(id);
 
@@ -38,7 +42,7 @@ export const getDemandDetailsHandler = (req: AuthenticatedRequest, res: Response
   }
 
   const history = erpService.getHistoriesByDemandId(id);
-  res.status(200).json({ demand, history });
+  res.status(200).json({ demand: visibleDemand(demand, req.user.role), history: visibleHistory(history, req.user.role) });
 };
 
 export const createCommercialDemandHandler = (req: AuthenticatedRequest, res: Response): void => {
@@ -55,7 +59,7 @@ export const createCommercialDemandHandler = (req: AuthenticatedRequest, res: Re
 
   res.status(201).json({
     message: 'Orçamento comercial cadastrado e iniciado no fluxo integrado.',
-    demand: newDemand,
+    demand: visibleDemand(newDemand, req.user.role),
   });
 };
 
@@ -81,7 +85,7 @@ export const approveCommercialDemandHandler = (req: AuthenticatedRequest, res: R
     res.status(409).json({ error: 'A etapa comercial da demanda já foi alterada.' });
     return;
   }
-  res.status(200).json({ message: 'Proposta aprovada e encaminhada ao Financeiro.', demand: updated });
+  res.status(200).json({ message: 'Proposta aprovada e encaminhada ao Financeiro.', demand: visibleDemand(updated, req.user.role) });
 };
 
 export const updateFinancialHandler = (req: AuthenticatedRequest, res: Response): void => {
@@ -111,7 +115,7 @@ export const updateFinancialHandler = (req: AuthenticatedRequest, res: Response)
     return;
   }
 
-  res.status(200).json({ message: 'Dados financeiros atualizados.', demand: updated });
+  res.status(200).json({ message: 'Dados financeiros atualizados.', demand: visibleDemand(updated, req.user.role) });
 };
 
 export const updateRhHandler = (req: AuthenticatedRequest, res: Response): void => {
@@ -141,7 +145,7 @@ export const updateRhHandler = (req: AuthenticatedRequest, res: Response): void 
     return;
   }
 
-  res.status(200).json({ message: 'Dados de RH e alocação atualizados.', demand: updated });
+  res.status(200).json({ message: 'Dados de RH e alocação atualizados.', demand: visibleDemand(updated, req.user.role) });
 };
 
 export const getGerencialReportHandler = (_req: AuthenticatedRequest, res: Response): void => {
