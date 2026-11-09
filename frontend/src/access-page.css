@@ -1,0 +1,18 @@
+/* Access forms keep the approved separate, centered layout and existing theme pairs. */
+.entry-skip-link { position: absolute; z-index: 100; top: 12px; left: 16px; display: inline-flex; align-items: center; min-height: 44px; padding: 10px 16px; border: 2px solid var(--focus-ring); border-radius: 10px; background: var(--panel-surface); color: var(--on-surface); font-size: 14px; text-decoration: none; transform: translateY(-160%); }
+.entry-skip-link:focus { transform: translateY(0); }
+.entry-page #public-content:focus { outline: none; }
+.entry-page .entry-auth-main { padding-top: 24px; }
+.entry-page .entry-auth-main .login-panel { box-shadow: 0 16px 48px #25242808; }
+.entry-auth-main .login-header { align-self: stretch; }
+.entry-page .entry-auth-main .login-content { padding-block: 24px; }
+.entry-page .entry-auth-main .login-form > p { max-width: 36ch; margin-inline: auto; font-size: 15px; line-height: 1.6; text-wrap: pretty; }
+.entry-page .entry-auth-main .login-form .field-label { font-size: 14px; line-height: 1.5; gap: 8px; }
+.entry-page .entry-auth-main .login-form .field-label input { font-size: 16px; }
+.entry-page .entry-auth-main .login-submit { font-size: 14px; }
+.entry-page .entry-auth-main .pending-note { font-size: 13px; line-height: 1.6; }
+.entry-page .entry-auth-main .login-footer { font-size: 12px; line-height: 1.5; }
+.entry-page .entry-auth-main .login-alert:focus { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
+.entry-page .entry-auth-main .registration-success { align-items: center; }
+.entry-page .entry-auth-main .success-mark { margin-bottom: 12px; color: var(--soft-accent-ink); border-color: var(--outline); background: var(--soft-accent-surface); }
+@media(max-width:520px) { .entry-page .entry-auth-main { padding-block: 16px 32px; }.entry-page .entry-auth-main .login-footer { font-size: 11px; }.entry-page .entry-auth-main .login-panel { padding: 22px; } }

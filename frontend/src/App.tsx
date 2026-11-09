@@ -106,6 +106,7 @@ function App() {
   useEffect(() => {
     setSearch(''); setHistoryDemand(null); setShowCreate(false); setProfileOpen(false); setGuideOpen(false);
     setNavSearch(''); setNavSearchOpen(false);
+    if (!user) setError('');
     if (!loading && user) document.querySelector<HTMLElement>('.page-content')?.focus({ preventScroll: true });
   }, [route.pathname, loading, user?.id]);
 
