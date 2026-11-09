@@ -1,11 +1,12 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import type { DemandStatus, Role, SectorMessage, Employee, TeamAllocation, FinancialEntry, FinancialEvent } from '../types';
+import type { DemandStatus, Role, SectorMessage, Employee, TeamAllocation, FinancialEntry, FinancialEvent, DirectMessage, DirectConversation, MessagingPerson } from '../types';
 
 type AccountStatus = 'PENDING' | 'ACTIVE' | 'REJECTED';
 
 interface Database {
   public: {
     Tables: {
+      direct_messages: { Row: DirectMessage; Insert: never; Update: never; Relationships: [] };
       financial_entries: { Row: FinancialEntry; Insert: never; Update: never; Relationships: [] };
       financial_entry_events: { Row: FinancialEvent; Insert: never; Update: never; Relationships: [] };
       employees: { Row: Employee; Insert: never; Update: never; Relationships: [] };
@@ -85,6 +86,11 @@ interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      search_messaging_people: { Args: { p_query: string }; Returns: MessagingPerson[] };
+      open_direct_conversation: { Args: { p_other: string }; Returns: string };
+      get_direct_inbox: { Args: { p_before_at?: string; p_before_id?: string; p_conversation?: string }; Returns: DirectConversation[] };
+      send_direct_message: { Args: { p_conversation: string; p_body: string; p_nonce: string; p_demand?: string | null }; Returns: string };
+      mark_direct_read: { Args: { p_conversation: string; p_message: string }; Returns: undefined };
       create_financial_entries: {
         Args: { p_batch: string; p_direction: string; p_description: string; p_counterparty: string; p_total_cents: number; p_first_due: string; p_installments: number; p_demand: string | null; p_notes: string };
         Returns: string;

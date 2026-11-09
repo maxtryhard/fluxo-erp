@@ -187,3 +187,6 @@ A revisão e as correções de permissões no banco estão em [SUPABASE_ACCESS_A
 
 
 Login e cadastro têm validação de e-mail e controle local de tentativas **sem CAPTCHA**. Login pausa cinco minutos após cinco credenciais inválidas em dez minutos; cadastro aceita até três envios em dez minutos e pausa dez minutos ao atingir o limite. Números e intervalos ficam em `frontend/src/utils/authAttemptPolicy.ts`. O estado persiste no mesmo navegador e é compartilhado entre abas; não equivale a bloqueio global de conta. Detalhes e limites estão em [PROPOSTA_PROTECAO_LOGIN_CADASTRO.md](docs/PROPOSTA_PROTECAO_LOGIN_CADASTRO.md). Testes: `npm run test:auth --workspace=frontend`.
+
+
+A central de [conversas privadas](docs/PRIVATE_CONVERSATIONS.md) reúne busca de pessoas por nome/e-mail, mensagens individuais, não lidas e vínculo com demandas. Os canais de setor continuam disponíveis. A migration `20261103204909_private_conversations.sql` já foi aplicada no Supabase conectado; não reenvie o SQL pelo editor.

@@ -33,6 +33,7 @@ import { navigate, useBrowserRoute } from './routing/browser';
 import { Link } from './routing/Link';
 import type { CreateDemandInput, Demand, DemandHistory, DemandStatus, Overview, RegistrationRequest, Role, User } from './types';
 
+const MessagingCenter = lazy(() => import('./components/MessagingCenter'));
 const DataVisualization = lazy(() => import('./components/DataVisualization'));
 const GuidedTour = lazy(() => import('./components/GuidedTour'));
 const PeoplePage = lazy(() => import('./components/PeoplePage').then((module) => ({ default: module.PeoplePage })));
@@ -137,13 +138,14 @@ function App() {
       if (page === 'commercial') return item.status === 'ORCAMENTO' || item.status === 'APROVADO_COMERCIAL';
       return true;
     });
-    return byPage.filter((item) =>
+    const linkedId = page === 'demands' ? new URLSearchParams(route.search).get('demanda') : null;
+    return byPage.filter(item => !linkedId || item.id === linkedId).filter((item) =>
       [item.code, item.title, item.clientName, statusLabels[item.status]]
         .join(' ')
         .toLocaleLowerCase('pt-BR')
         .includes(query),
     );
-  }, [demands, page, search]);
+  }, [demands, page, search, route.search]);
 
   const handleLogin = async (email: string, password: string) => {
     setError('');
@@ -299,7 +301,7 @@ function App() {
           {!routeBlocked && page === 'overview' && <GuideInvitation onOpen={() => setGuideOpen(true)} />}
           {error && <div className="alert" role="alert"><span>{error}</span><button aria-label="Fechar aviso" onClick={() => setError('')}><X size={16} /></button></div>}
           {routeBlocked ? <RouteFeedback denied={decision.kind === 'forbidden'} /> : page === 'chat' ? (
-            <section><div className="page-heading"><div><div className="eyebrow">COLABORAÇÃO</div><h1>Conversas</h1><p>Contexto compartilhado para uma operação conectada.</p></div></div><Communication user={user} /></section>
+            <Suspense fallback={<p role="status">Carregando conversas...</p>}><MessagingCenter key={`${user.id}-${user.role}`} user={user} demands={demands}/></Suspense>
           ) : page === 'registrations' ? (
             <RegistrationRequestsPage requests={registrationRequests} onApprove={(id, role) => void runAction(() => api.approveRegistration(id, role))} onReject={(id) => void runAction(() => api.rejectRegistration(id))} />
           ) : page === 'profile' ? (
@@ -318,13 +320,13 @@ function App() {
               </div>
               <div className="filter-row" data-tour="demand-search">
                 <label className="search-box"><Search size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar demanda, cliente ou código..." /></label>
-                <span className="results-count">{filteredDemands.length} registros</span>
+                <span className="results-count">{filteredDemands.length} registros</span>{page === 'demands' && new URLSearchParams(route.search).has('demanda') && <Link className="text-button" to="/demandas">Ver todas as demandas</Link>}
               </div>
               <div data-tour="demand-results">
               {filteredDemands.length ? (
                 <div className="demand-list">
                   {filteredDemands.map((item) => (
-                    <DemandCard key={item.id} demand={item} user={user} page={page} onHistory={() => void showHistory(item)} onRefresh={refresh} />
+                    <DemandCard initiallyExpanded={page === 'demands' && new URLSearchParams(route.search).get('demanda') === item.id} key={item.id} demand={item} user={user} page={page} onHistory={() => void showHistory(item)} onRefresh={refresh} />
                   ))}
                 </div>
               ) : <EmptyState page={page} onCreate={() => setShowCreate(true)} />}
@@ -517,10 +519,10 @@ function MetricCard({ icon: Icon, label, value, note, tone, featured = false }: 
   return <div className={`metric-card ${featured ? 'metric-card-featured' : ''}`}><div className={`metric-icon metric-${tone}`}><Icon size={18} /></div><span className="metric-label">{label}</span><strong className="metric-value">{value}</strong><span className="metric-note">{note}</span></div>;
 }
 
-function DemandCard({ demand, user, page, onHistory, onRefresh, showReview = true }: {
-  demand: Demand; user: User; page: Page; onHistory: () => void; onRefresh: () => Promise<void>; showReview?: boolean;
+function DemandCard({ demand, user, page, onHistory, onRefresh, showReview = true, initiallyExpanded = false }: {
+  demand: Demand; user: User; page: Page; onHistory: () => void; onRefresh: () => Promise<void>; showReview?: boolean; initiallyExpanded?: boolean;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(initiallyExpanded);
   return (
     <article className="demand-card">
       <div className="demand-card-main">
