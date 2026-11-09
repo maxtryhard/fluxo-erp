@@ -34,6 +34,7 @@
 .entry-home [data-reveal] { --reveal-delay: 0ms; transition: opacity 650ms var(--motion-ease) var(--reveal-delay),transform 800ms var(--motion-ease) var(--reveal-delay); }
 .entry-home [data-revealed="false"] { opacity: 0; transform: translate3d(0,36px,0); }
 .entry-home [data-revealed="true"], .entry-home [data-reveal]:focus-within { opacity: 1; transform: none; }
+.entry-home [data-reveal]:focus-within { transition: none; }
 .entry-home .entry-workflow-grid > article:nth-child(2) { --reveal-delay: 70ms; }
 .entry-home .entry-workflow-grid > article:nth-child(3) { --reveal-delay: 140ms; }
 .entry-home .entry-workflow-grid > article:nth-child(4) { --reveal-delay: 210ms; }
