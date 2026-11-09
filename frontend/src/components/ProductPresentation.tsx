@@ -3,6 +3,8 @@ import { ArrowDown, ArrowRight, BriefcaseBusiness, CircleDollarSign, GitBranch, 
 import { Link } from '../routing/Link';
 import { ScrollPresentation } from './ScrollPresentation';
 import { DemandDemo } from './DemandDemo';
+import { FeatureIllustration } from './FeatureIllustration';
+import { MotionControl, useLandingReveals } from './LandingMotion';
 
 const topics = [
   { id: 'flow', label: 'Visão geral', icon: GitBranch, title: 'Uma demanda conecta todo o trabalho', description: 'Do primeiro orçamento à equipe em campo, cada setor recebe as informações e o parecer de quem veio antes. Experimente esse caminho na demonstração.', detail: 'As decisões acompanham a demanda.' },
@@ -20,7 +22,7 @@ function Showcase({ selected, onSelect }: { selected: number; onSelect: (index: 
     event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next]?.focus();
   };
   return <div className="entry-showcase" data-sector={topic.id}>
-    <div key={topic.id} className="entry-mesh" aria-hidden="true" />
+    <div className="entry-mesh" aria-hidden="true" />
     <div className="entry-floating-content">
       <div className="entry-tabs" role="tablist" aria-label="Áreas do sistema">
         {topics.map(({ id, label, icon: TabIcon }, index) => <button key={id} id={`entry-tab-${id}`} type="button" role="tab" aria-selected={selected === index} aria-controls="entry-topic" tabIndex={selected === index ? 0 : -1} onClick={() => onSelect(index)} onKeyDown={(event) => navigate(event, index)}><TabIcon size={18} aria-hidden="true" /><span>{label}</span></button>)}
@@ -42,14 +44,16 @@ function WorkflowPresentation({ onExplore }: { onExplore: (index: number) => voi
     { title: 'Acompanhamento', icon: GitBranch, description: 'Andamento e histórico para entender cada etapa do trabalho.', target: 0 },
   ];
   return <section className="entry-workflow" id="funcionamento" aria-labelledby="entry-workflow-title">
-    <div className="entry-workflow-heading"><h2 id="entry-workflow-title">Cada área tem seu espaço. O trabalho tem continuidade.</h2><p>As informações seguem com a demanda. Sua equipe consegue consultar o que já foi decidido e entender o próximo passo.</p></div>
-    <div className="entry-workflow-grid">{stages.map(({ title, icon: Icon, description, target }) => <article key={title}><Icon size={23} strokeWidth={1.6} aria-hidden="true" /><h3>{title}</h3><p>{description}</p><button type="button" onClick={() => onExplore(target)} aria-label={`Ver na demonstração: ${title}`}>Ver na demonstração<ArrowRight size={16} aria-hidden="true" /></button></article>)}</div>
-    <div className="entry-connections"><div><MessageSquare size={22} aria-hidden="true" /><h3>Converse com quem participa</h3><p>Mensagens entre setores e conversas privadas mantêm a comunicação perto do trabalho.</p></div><div><ShieldCheck size={22} aria-hidden="true" /><h3>Cada acesso tem seu limite</h3><p>Os módulos e as informações disponíveis respeitam as permissões de cada conta.</p></div></div>
-    <div className="entry-closing"><div><h2>Conheça o Fluxo por dentro</h2><p>Solicite seu cadastro para participar do trabalho da equipe.</p></div><Link className="entry-hero-primary" to="/cadastro">Solicitar cadastro<ArrowRight size={17} aria-hidden="true" /></Link></div>
+    <div className="entry-workflow-heading" data-reveal="heading"><h2 id="entry-workflow-title">Cada área tem seu espaço. O trabalho tem continuidade.</h2><p>As informações seguem com a demanda. Sua equipe consegue consultar o que já foi decidido e entender o próximo passo.</p></div>
+    <div className="entry-workflow-grid">{stages.map(({ title, icon: Icon, description, target }) => <article key={title} data-reveal="card"><FeatureIllustration sector={target} /><div className="entry-feature-title"><Icon size={20} strokeWidth={1.6} aria-hidden="true" /><h3>{title}</h3></div><p>{description}</p><button type="button" onClick={() => onExplore(target)} aria-label={`Ver na demonstração: ${title}`}>Ver na demonstração<ArrowRight size={16} aria-hidden="true" /></button></article>)}</div>
+    <div className="entry-connections"><div data-reveal="connection"><MessageSquare size={22} aria-hidden="true" /><h3>Converse com quem participa</h3><p>Mensagens entre setores e conversas privadas mantêm a comunicação perto do trabalho.</p></div><div data-reveal="connection"><ShieldCheck size={22} aria-hidden="true" /><h3>Cada acesso tem seu limite</h3><p>Os módulos e as informações disponíveis respeitam as permissões de cada conta.</p></div></div>
+    <div className="entry-closing" data-reveal="closing"><div><h2>Conheça o Fluxo por dentro</h2><p>Solicite seu cadastro para participar do trabalho da equipe.</p></div><Link className="entry-hero-primary" to="/cadastro">Solicitar cadastro<ArrowRight size={17} aria-hidden="true" /></Link></div>
   </section>;
 }
 
-export function ProductPresentation() {
+export function ProductPresentation({ motionPaused, reducedMotion, onToggleMotion }: { motionPaused: boolean; reducedMotion: boolean; onToggleMotion: () => void }) {
+  const presentation = useRef<HTMLElement>(null);
+  useLandingReveals(presentation, motionPaused);
   const [selected, setSelected] = useState(0);
   // An explicit choice takes precedence over the scroll story for the rest of this visit.
   const interacted = useRef(false);
@@ -57,11 +61,11 @@ export function ProductPresentation() {
   const explore = (index: number) => {
     select(index);
     document.getElementById(`entry-tab-${topics[index].id}`)?.focus({ preventScroll: true });
-    document.getElementById('demonstracao')?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
+    document.getElementById('demonstracao')?.scrollIntoView({ behavior: motionPaused ? 'instant' : 'smooth', block: 'start' });
   };
-  return <section className="entry-presentation" id="apresentacao" aria-labelledby="entry-title">
-    <div className="entry-intro"><h1 id="entry-title" tabIndex={-1}>Sua equipe trabalhando<br /><span>no mesmo sistema</span></h1><p>Conecte Comercial, Financeiro e RH para organizar as demandas e acompanhar o trabalho até a entrega.</p><div className="entry-hero-actions"><Link className="entry-hero-primary" to="/cadastro">Começar no Fluxo<ArrowRight size={17} aria-hidden="true" /></Link><a className="entry-hero-secondary" href="#demonstracao">Explorar o sistema<ArrowDown size={16} aria-hidden="true" /></a></div></div>
-    <div id="demonstracao" className="entry-demo-anchor"><ScrollPresentation onSectorChange={(index) => { if (!interacted.current) setSelected(index); }}><Showcase selected={selected} onSelect={select} /></ScrollPresentation></div>
+  return <section ref={presentation} className="entry-presentation" id="apresentacao" aria-labelledby="entry-title">
+    <div className="entry-intro"><h1 id="entry-title" tabIndex={-1}><span className="entry-title-line"><span>Sua equipe trabalhando</span></span>{' '}<span className="entry-title-line entry-title-accent"><span>no mesmo sistema</span></span></h1><p>Conecte Comercial, Financeiro e RH para organizar as demandas e acompanhar o trabalho até a entrega.</p><div className="entry-hero-actions"><Link className="entry-hero-primary" to="/cadastro">Começar no Fluxo<ArrowRight size={17} aria-hidden="true" /></Link><a className="entry-hero-secondary" href="#demonstracao">Explorar o sistema<ArrowDown size={16} aria-hidden="true" /></a></div><MotionControl paused={motionPaused} reduced={reducedMotion} onToggle={onToggleMotion} /></div>
+    <div id="demonstracao" className="entry-demo-anchor"><ScrollPresentation paused={motionPaused} onSectorChange={(index) => { if (!interacted.current) setSelected(index); }}><Showcase selected={selected} onSelect={select} /></ScrollPresentation></div>
     <WorkflowPresentation onExplore={explore} />
     <footer className="entry-footer"><span>Fluxo Gestão integrada</span><Link to="/entrar">Já tem uma conta? Entrar<ArrowRight size={14} aria-hidden="true" /></Link></footer>
   </section>;
