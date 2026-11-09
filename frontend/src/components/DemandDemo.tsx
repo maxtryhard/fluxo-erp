@@ -29,7 +29,7 @@ export function DemandDemo({ selected, onSelect }: { selected: number; onSelect:
 
   return <div className="entry-demo" role="group" aria-label="Demonstração de uma demanda">
     <div className="entry-demo-top"><span><FileText size={15} aria-hidden="true" />Demanda de exemplo</span><button type="button" className="entry-demo-reset" onClick={reset} aria-label="Reiniciar demonstração" title="Reiniciar demonstração"><RotateCcw size={16} aria-hidden="true" /></button></div>
-    <div className="entry-demo-record"><h3>Manutenção preventiva</h3><span className={`entry-demo-status${finished ? ' is-complete' : ''}`}>{finished && <CheckCheck size={14} aria-hidden="true" />}{statuses[step]}</span></div>
+    <div className="entry-demo-record"><h3>Manutenção preventiva</h3><span key={step} className={`entry-demo-status${finished ? ' is-complete' : ''}`}>{finished && <CheckCheck size={14} aria-hidden="true" />}{statuses[step]}</span></div>
     <ol className="entry-demo-pipeline" aria-label="Encaminhamento da demanda">
       {stages.map((name, index) => <li key={name} aria-current={step === index ? 'step' : undefined} data-state={step > index ? 'done' : step === index ? 'current' : 'waiting'}><span className="entry-demo-node">{step > index ? <Check size={13} aria-hidden="true" /> : <span />}</span><span>{name}</span><span className="sr-only">{step > index ? ': concluído' : step === index ? ': etapa atual' : ': aguardando'}</span></li>)}
     </ol>
