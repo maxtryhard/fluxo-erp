@@ -1,5 +1,6 @@
 :root {
   color-scheme: light;
+  --status-complete: #28745e;
   --panel-surface: #fff;
   --panel-muted: #f7f7f5;
   --link-color: #425fae;
@@ -116,3 +117,12 @@
   .detail-facts span { flex-wrap: wrap; gap: 4px 12px; }
   .detail-description .history-link { white-space: normal; text-align: left; line-height: 1.5; }
 }
+
+/* Secondary copy must keep AA contrast on the actual header and chart surfaces. */
+.topbar-brand small, .breadcrumb, .crumb-separator,
+.analytics-kicker, .stage-donut-center small { color: var(--on-surface-variant); }
+.analytics-kicker { font-size: 11px; }
+
+.empty-state p { color: var(--on-surface-variant); }
+.dock-search input::placeholder, .messenger-search input::placeholder,
+.direct-draft textarea::placeholder { color: var(--placeholder-color); opacity: 1; }

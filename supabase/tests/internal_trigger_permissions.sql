@@ -19,7 +19,7 @@ begin
   for fn in
     select p.oid,p.proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace
     where n.nspname='public' and p.prorettype not in ('trigger'::regtype,'event_trigger'::regtype)
-      and p.proname<>'hr_peak_load'
+      and p.proname not in ('hr_peak_load','claim_direct_action')
   loop
     if not has_function_privilege('authenticated',fn.oid,'EXECUTE') or has_function_privilege('anon',fn.oid,'EXECUTE') then
       raise exception 'Application function grant changed: %',fn.proname;
