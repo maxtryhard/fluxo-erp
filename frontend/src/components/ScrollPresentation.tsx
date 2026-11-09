@@ -50,11 +50,11 @@ export function ScrollPresentation({ children, onSectorChange }: { children: Rea
     const schedule = () => { if (!frame) frame = requestAnimationFrame(paint); };
     const measure = () => {
       baseWidth = element.clientWidth;
-      stage.style.setProperty('--scene-card-width', `${Math.min(820, baseWidth - 48)}px`);
+      stage.style.setProperty('--scene-card-width', `${Math.min(1040, baseWidth - 48)}px`);
       baseHeight = Math.max(460, content.offsetHeight + 96);
       fullHeight = innerHeight - 32;
       fullWidth = Math.max(baseWidth, document.documentElement.clientWidth - 32);
-      cardScale = Math.max(1, Math.min(1.18, (fullWidth - 96) / content.offsetWidth, (fullHeight - 120) / content.offsetHeight));
+      cardScale = Math.max(1, Math.min(1.10, (fullWidth - 96) / content.offsetWidth, (fullHeight - 120) / content.offsetHeight));
       enabled = !motion.matches && fullHeight > baseHeight + 40;
       element.style.setProperty('--scene-tail', `${Math.max(0, fullHeight - baseHeight)}px`);
       element.dataset.scroll = enabled ? 'active' : 'static';

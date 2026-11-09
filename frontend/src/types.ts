@@ -141,3 +141,11 @@ export type FinancialEvent = {
   details: string;
   created_at: string;
 };
+
+export type MessagingPerson = { user_id: string; full_name: string; department: string };
+export type DirectConversation = {
+ conversation_id: string; other_user_id: string; other_name: string; other_department: string; other_active: boolean;
+ last_body: string | null; last_sender_id: string | null; last_message_at: string | null; last_message_id: string | null;
+ sort_at: string; unread_count: number;
+};
+export type DirectMessage = { id: string; conversation_id: string; sender_id: string; body: string; demand_id: string | null; client_nonce: string; created_at: string };

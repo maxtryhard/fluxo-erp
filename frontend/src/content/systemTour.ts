@@ -24,7 +24,7 @@ const steps: TourStep[] = [
   { id: 'people-team', page: 'people', target: target('people-toolbar'), activate: target('people-tab-team'), title: 'Prepare a equipe antes da demanda', body: 'Equipe organiza colaboradores, funções, competências e disponibilidade. RH e Administração gerenciam os cadastros; Gerência consulta. Colaborador não é uma conta de acesso.' },
   { id: 'people-allocations', page: 'people', target: target('people-tab-allocations'), activate: target('people-tab-allocations'), title: 'Planeje quem vai atuar', body: 'Alocações vincula pessoas a demandas recebidas, com função, período e dedicação. O sistema verifica conflitos antes de salvar.' },
   { id: 'people-demands', page: 'people', target: target('people-tab-demands'), activate: target('people-tab-demands'), title: 'Confira a equipe e encaminhe', body: 'Demandas recebidas reúne o que foi aprovado pelo Financeiro. O RH monta a equipe e registra o parecer para enviar à execução.' },
-  { id: 'chat', page: 'chat', target: target('conversation-scopes'), title: 'Escolha quem pode ler a conversa', body: 'Entre setores é compartilhado. Financeiro e RH têm canais restritos. Use os detalhes da demanda quando a conversa pertencer a uma solicitação específica.' },
+  { id: 'chat', page: 'chat', target: target('conversation-scopes'), title: 'Escolha quem pode ler a conversa', body: 'Pessoas reúne conversas privadas. Setores mantém os canais compartilhados e restritos. Você também pode vincular uma demanda à mensagem, respeitando as permissões de cada área.' },
 ];
 
 export function getTourSteps(allowedPages: readonly string[], onlyPage?: GuideDestination): TourStep[] {

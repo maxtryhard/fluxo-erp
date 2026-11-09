@@ -57,12 +57,12 @@
 .horizontal-nav.navigation-capsule button.dock-search-active { background: var(--dock-hover); color: #fff; }
 .horizontal-nav.navigation-capsule button.dock-logout:hover { background: #5c3037; color: #ffd7d4; }
 .navigation-capsule .dock-divider { z-index: 1; background: var(--dock-border); margin-inline: 2px; height: 24px; }
-.navigation-capsule .dock-count { position: absolute; top: -2px; right: -2px; display: grid; min-width: 17px; height: 17px; padding: 0 4px; border: 2px solid var(--dock-surface); border-radius: 999px; background: var(--dock-accent); color: var(--dock-active-ink); font-size: 9px; }
+.navigation-capsule .dock-count { position: absolute; top: -2px; right: -2px; display: grid; min-width: 20px; height: 20px; padding: 0 4px; border: 2px solid var(--dock-surface); border-radius: 999px; background: var(--dock-accent); color: var(--dock-active-ink); font-size: 11px; font-weight: 600; }
 .horizontal-nav.navigation-capsule :is(button, a).dock-item-active .dock-count { background: var(--dock-surface); color: #fff; border-color: var(--dock-accent); }
 .navigation-capsule .dock-empty { color: var(--dock-ink); }
 .dock-highlight { position: absolute; z-index: 0; left: 0; top: 8px; height: 44px; border-radius: 999px; background: var(--dock-accent); pointer-events: none; transition: transform 280ms cubic-bezier(.2,.8,.2,1), width 240ms ease; }
-.dock-hint { position: fixed; z-index: 50; transform: translateX(-50%); max-width: min(220px, calc(100vw - 24px)); padding: 8px 12px; border-radius: 10px; background: var(--dock-surface); color: #f7f5f9; border: 1px solid var(--dock-border); font-size: 12px; line-height: 1.4; text-align: center; pointer-events: none; box-shadow: 0 4px 14px #17131e14; animation: dock-hint-enter 120ms ease-out; }
-.dock-hint::after { position: absolute; content: ''; left: 50%; bottom: -4px; width: 7px; height: 7px; background: var(--dock-surface); border-right: 1px solid var(--dock-border); border-bottom: 1px solid var(--dock-border); transform: translateX(-50%) rotate(45deg); }
+.dock-hint { position: fixed; z-index: 50; transform: translateX(-50%); max-width: min(220px, calc(100vw - 24px)); padding: 8px 12px; border-radius: 10px; background: var(--dock-surface); color: #f7f5f9; border: 1px solid var(--dock-border); font-size: 13px; line-height: 1.5; text-align: center; pointer-events: none; box-shadow: 0 4px 14px #17131e14; animation: dock-hint-enter 120ms ease-out; }
+.dock-hint-arrow { position: absolute; left: 50%; bottom: -4px; width: 7px; height: 7px; background: var(--dock-surface); border-right: 1px solid var(--dock-border); border-bottom: 1px solid var(--dock-border); transform: translateX(-50%) rotate(45deg); }
 @keyframes dock-hint-enter { from { opacity: 0; } to { opacity: 1; } }
 @media (max-width:600px) {
   .horizontal-nav.navigation-capsule { gap: 5px; padding: 8px; }

@@ -1,14 +1,36 @@
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
 type Highlight = { left: number; width: number };
-type Hint = { text: string; left: number; top: number };
+type Hint = { text: string; anchor: number; bottom: number };
+
+function DockHint({ hint }: { hint: Hint }) {
+  const label = useRef<HTMLSpanElement>(null);
+  const [position, setPosition] = useState({ left: hint.anchor, top: hint.bottom - 42, arrow: 0 });
+  useLayoutEffect(() => {
+    if (!label.current) return;
+    const { width, height } = label.current.getBoundingClientRect();
+    const left = Math.max(width / 2 + 12, Math.min(innerWidth - width / 2 - 12, hint.anchor));
+    setPosition({ left, top: Math.max(8, hint.bottom - height - 10), arrow: hint.anchor - left });
+  }, [hint]);
+  return <span ref={label} className="dock-hint" aria-hidden="true" style={{ left: position.left, top: position.top }}>
+    {hint.text}<span className="dock-hint-arrow" style={{ left: `calc(50% + ${position.arrow}px)` }} />
+  </span>;
+}
 
 /** Preserve existing authorized destinations while presenting them as an icon dock. */
 export function NavigationDock({ activePage, children }: { activePage: string; children: ReactNode }) {
   const nav = useRef<HTMLElement>(null);
   const [highlight, setHighlight] = useState<Highlight | null>(null);
   const [hint, setHint] = useState<Hint | null>(null);
+
+  useEffect(() => {
+    if (!hint) return;
+    const hide = () => setHint(null);
+    window.addEventListener('scroll', hide, { passive: true });
+    window.addEventListener('resize', hide);
+    return () => { window.removeEventListener('scroll', hide); window.removeEventListener('resize', hide); };
+  }, [hint]);
 
   useLayoutEffect(() => {
     const element = nav.current;
@@ -36,7 +58,8 @@ export function NavigationDock({ activePage, children }: { activePage: string; c
     const button = target instanceof Element ? target.closest<HTMLElement>('button[aria-label], a[aria-label]') : null;
     if (!button) return;
     const bounds = button.getBoundingClientRect();
-    setHint({ text: button.getAttribute('aria-label') ?? '', left: Math.max(115, Math.min(window.innerWidth - 115, bounds.left + bounds.width / 2)), top: Math.max(8, bounds.top - 42) });
+    const next = { text: button.getAttribute('aria-label') ?? '', anchor: bounds.left + bounds.width / 2, bottom: bounds.top };
+    setHint((previous) => previous?.text === next.text && previous.anchor === next.anchor && previous.bottom === next.bottom ? previous : next);
   };
 
   return <>
@@ -47,6 +70,6 @@ export function NavigationDock({ activePage, children }: { activePage: string; c
       {highlight && <span className="dock-highlight" aria-hidden="true" style={{ width: highlight.width, transform: `translateX(${highlight.left}px)` }} />}
       {children}
     </nav>
-    {hint && createPortal(<span className="dock-hint" aria-hidden="true" style={{ left: hint.left, top: hint.top }}>{hint.text}</span>, document.body)}
+    {hint && createPortal(<DockHint hint={hint} />, document.body)}
   </>;
 }
