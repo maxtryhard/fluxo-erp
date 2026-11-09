@@ -8,6 +8,7 @@ import './navigation-dock.css';
 import './system-guide.css';
 import './guided-tour.css';
 import './entry-page.css';
+import './landing-motion.css';
 import './access-page.css';
 import './messaging.css';
 import { applyTheme, preferredTheme } from './theme';

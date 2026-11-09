@@ -91,3 +91,12 @@ Revision after the user's correction: the entire 7.8-second video was sampled at
 The user explicitly requires the presentation structure to follow the reference, beyond borrowing isolated visual motifs. Preserve the observed hierarchy: header, centered hero with access actions, gradient feature stage, centered lower explanation/CTA and four explanatory cards. Adapt the four lower cards to the existing Commercial → Finance → People → operation-follow-up flow. Do not reintroduce an embedded authentication sidebar.
 
 The user subsequently explicitly requested the scroll animation itself. The expansion now follows native page progress through a sticky scene: grow, hold/change sectors, contract, release. This supersedes the earlier manual expand-dialog interpretation. Respect reduced motion and short-screen fallbacks; never intercept wheel/touch input. The user also requested less decorative presentation copy: remove counters, redundant tags, uppercase filler and fragmented slogans, and use complete factual sentences about Fluxo's actual functions.
+
+## Collect UI — motion depth reference (9 November 2026)
+
+The supplied 15-second, 60fps video was downloaded for inspection only:
+https://cdn.collectui.com/amplify_video/2107796915303878656/vid/avc1/2866x1792/8AAA6WYleP8hxsei-optimized.mp4
+
+Frames sampled at 0, 2, 4, 6, 8, 10, 12 and 14 seconds show a centered typographic hero with icon arrivals, a broad application preview, a horizontally arranged screenshot gallery and a lower feature grid with layered miniature illustrations. Fluxo adapts the entrance sequence, depth, lateral transitions and staggered feature reveals to its own Commercial → Finance → People story. Timings are authored for Fluxo rather than asserted as the reference's exact implementation. No artwork, identities, third-party logos or reference media is shipped.
+
+Animation is controlled by an explicit pause button and reduced-motion preference. Main-thread scroll work uses cached geometry and transforms, stops in hidden tabs and stops scheduling once settled. Keep all ERP workspaces free of this landing-only choreography.
