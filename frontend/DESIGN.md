@@ -245,3 +245,9 @@ The lower feature cards return to their matching sector tab, including keyboard 
 ### Text contrast and navigation hints
 
 Header metadata, breadcrumbs, chart kickers, donut captions and empty-state descriptions use the semantic secondary text token in both themes. Account status uses `--status-complete` (`#28745e` in light mode; the existing readable green remains in dark mode). Search placeholders use the theme's placeholder token with full opacity. Navigation counters use 11px type and a 20px badge. Dock hints measure their actual text box before paint: center on the destination where space permits, clamp to viewport edges and keep the arrow aligned with the icon. They close when scrolling/resizing makes the original anchor stale. Keyboard focus and Escape remain supported.
+
+### Reference review and access typography
+
+The November design review keeps the approved reference compositions and palette. Public demo metadata and labels are enlarged; mobile framing is reduced, sector labels balance naturally and lower-card actions explain their destination. Current demo steps expose `aria-current="step"`. Conversation typography prioritizes readable names, previews, privacy copy and composer text; selected hover remains selected. Empty-chat decoration is smaller. Dashboard legends use 12px type and financial figures use tabular numerals.
+
+`access-page.css` owns the public skip link and dedicated access-form refinements: 14px labels, 16px inputs, bounded supporting text and centered success feedback. Errors focus their message or the invalid confirmation field; success focuses its heading. General access errors are cleared when the public screen changes. The small-screen workspace header reserves separate columns for brand, page title and account actions so the title cannot overlap controls. Desktop breadcrumb centering remains intact. See `docs/DESIGN_REVIEW.md` for the sample, findings and verification limits.

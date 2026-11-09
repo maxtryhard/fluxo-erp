@@ -51,7 +51,7 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 .analytics-summary-grid .metric-card-featured .metric-icon { color: #fff; background: #ffffff24; }
 .analytics-summary-grid .metric-icon { position: absolute; top: 17px; right: 17px; width: 31px; height: 31px; background: transparent; color: #67656c; }
 .analytics-summary-grid .metric-label { max-width: calc(100% - 26px); font-size: 13px; color: #55535a; padding-top: 3px; }
-.analytics-summary-grid .metric-value { margin-top: 26px; font-family: inherit; font-weight: 500; font-size: clamp(23px, 2.2vw, 32px); letter-spacing: -1.1px; }
+.analytics-summary-grid .metric-value { font-variant-numeric: tabular-nums; margin-top: 26px; font-family: inherit; font-weight: 500; font-size: clamp(23px, 2.2vw, 32px); letter-spacing: -1.1px; }
 .analytics-summary-grid .metric-note { margin-top: 7px; font-size: 12px; color: #66636b; }
 .analytics-panel { border: 1px solid #fff; border-radius: var(--radius-card); background: #ffffffd9; }
 .analytics-content-grid { gap: 20px; grid-template-columns: minmax(0, 1fr) 320px; }
@@ -71,7 +71,7 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 .analytics-side-stack .stage-donut { height: 120px; }
 .analytics-side-stack .stage-donut-center strong { font-size: 23px; }
 .analytics-side-stack .stage-mix-legend { gap: 9px; }
-.analytics-side-stack .stage-mix-row, .analytics-side-stack .stage-mix-label { font-size: 11px; }
+.analytics-side-stack .stage-mix-row, .analytics-side-stack .stage-mix-label { font-size: 12px; line-height: 1.4; }
 .analytics-side-stack .stage-count-list { padding: 6px 18px 18px; gap: 11px; }
 .stage-count-label { color: #59565e; font-size: 11px; }
 .stage-count-track { height: 7px; }
@@ -388,7 +388,7 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 .finance-due-list li > div { display: grid; gap: 6px; min-width: 0; }
 .finance-due-list strong { font-weight: 500; overflow-wrap: anywhere; }
 .finance-due-list span { font-size: 12px; color: var(--on-surface-variant); line-height: 1.5; }
-.finance-due-list b { white-space: nowrap; }
+.finance-due-list b { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .finance-empty { margin: 30px 0; font-size: 13px; line-height: 1.6; text-align: center; color: var(--on-surface-variant); }
 .finance-toolbar { margin-bottom: 20px; justify-content: flex-start; }
 .finance-toolbar .search-box { flex: 1; min-width: min(260px,100%); }
